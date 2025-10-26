@@ -26,7 +26,8 @@ typedef enum {
     kNegativeHead = -6,
     kNegativeTail = -7,
     kNegativeFree = -8,
-    kFailure = -9,
+    kZeroSize = -9,
+    kFailure = -10,
 } ListErrors;
 
 typedef enum {

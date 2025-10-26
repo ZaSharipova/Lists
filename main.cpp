@@ -3,6 +3,7 @@
 #include "ListFunctions.h"
 #include "Structs.h"
 #include "DoGraph.h"
+#include "DoDump.h"
 
 int main(void) {
     List list = {};
@@ -21,6 +22,7 @@ int main(void) {
     // ListDump(&list);
 
     DumpListToGraphviz(&list, "output.txt");
+    DoDump(&list);
     ListDtor(&list);
     return 0;
 }
