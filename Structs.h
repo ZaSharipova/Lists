@@ -3,9 +3,11 @@
 
 #include <stdio.h>
 
+typedef  double List_t;
+
 struct List {
     int size;
-    int *data;
+    List_t *data;
     int *next;
     int *prev;
     int head;
@@ -14,13 +16,24 @@ struct List {
     int number_of_elem;
 };
 
+typedef enum {
+    kSuccess = 0,
+    kNoMemory = -1,
+    kNullData = -2,
+    kNullNext = -3,
+    kNullPrev = -4,
+    kInvalidParam = -5,
+    kNegativeHead = -6,
+    kNegativeTail = -7,
+    kNegativeFree = -8,
+    kFailure = -9,
+} ListErrors;
 
 typedef enum {
-    kSuccess,
-    kNoMemory,
-    kNullData,
-    kNullNext,
-    kNullPrev,
-} ListErrors;
+    kIncrease,
+    kDecrease,
+    kIncreaseZero,
+    kNoChange,
+} Realloc_Mode;
 
 #endif //STRUCTS_H_

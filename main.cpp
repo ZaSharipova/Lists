@@ -2,6 +2,7 @@
 
 #include "ListFunctions.h"
 #include "Structs.h"
+#include "DoGraph.h"
 
 int main(void) {
     List list = {};
@@ -9,10 +10,17 @@ int main(void) {
     ListCtor(&list);
     ListDump(&list);
 
-    InsertList(&list, 1, 32);
-
-    InsertList(&list, 2, 20);
-    InsertList(&list, 1, 25);
+    InsertElement(&list, 1, 32);
     ListDump(&list);
+    InsertElement(&list, 1, 20);
+    ListDump(&list);
+    InsertElement(&list, 1, 25);
+    //InsertList(&list, 2, 40);
+    ListDump(&list);
+    DeleteElement(&list, 2);
+    ListDump(&list);
+
+    DumpListToGraphviz(&list, "output.txt");
+    ListDtor(&list);
     return 0;
 }
