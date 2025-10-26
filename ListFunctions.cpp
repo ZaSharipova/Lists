@@ -175,12 +175,12 @@ ListErrors InsertElement(List *list, int pos, List_t value) {
         list->head = new_index;
         //printf("1 - e ");
 
-    } else if (pos == list->tail) {
-        list->next[pos] = new_index;
+    } else if (pos >= list->tail) {
+        list->next[list->tail] = new_index;
         list->next[new_index] = 0;
-        list->prev[new_index] = pos;
+        list->prev[new_index] = list->tail;
         list->tail = new_index;
-        //printf("2 - e ");
+        printf("2 - e - %d ", pos);
 
     } else {
         list->next[new_index] = list->next[pos];
@@ -210,30 +210,35 @@ ListErrors DeleteElement(List *list, int pos) {
         }
     }
 
-    if (list->number_of_elem == 0 || pos == 0)
+    if (list->size == 0) {
+        return kZeroSize;
+    }
+
+    if (list->number_of_elem == 0 || pos == 0) {
         return kInvalidParam;
+    }
 
     list->data[pos] = 0;
 
     if (pos == list->head) {
         list->head = list->next[pos];
-        if (list->head)
+        if (list->head) {
             list->prev[list->head] = 0;
+        }
     }
     
     else if (pos == list->tail) {
         list->tail = list->prev[pos];
-        if (list->tail)
+        if (list->tail) {
             list->next[list->tail] = 0;
+        }
     }
     
     else {
         int prev_elem = list->prev[pos];
         int next_elem = list->next[pos];
-        if (prev_elem)
-            list->next[prev_elem] = next_elem;
-        if (next_elem)
-            list->prev[next_elem] = prev_elem;
+        list->next[prev_elem] = next_elem;
+        list->prev[next_elem] = prev_elem;
     }
 
     list->next[pos] = list->free;

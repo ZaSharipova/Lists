@@ -12,13 +12,13 @@ int main(void) {
 
     InsertElement(&list, 1, 32);
     ListDump(&list);
-    InsertElement(&list, 1, 20);
+    InsertElement(&list, 2, 20);
     ListDump(&list);
-    InsertElement(&list, 1, 25);
+    InsertElement(&list, 3, 25);
     //InsertList(&list, 2, 40);
     ListDump(&list);
-    DeleteElement(&list, 2);
-    ListDump(&list);
+    // DeleteElement(&list, 3);
+    // ListDump(&list);
 
     DumpListToGraphviz(&list, "output.txt");
     ListDtor(&list);
