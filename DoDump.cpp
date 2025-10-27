@@ -6,55 +6,64 @@
 #include <time.h>
 #include <assert.h>
 
-void DoDump(List *list) {
+void DoDump(FILE *file, List *list, const char *var_name, const char *filename, const char *image_file) {
+    assert(file);
     assert(list);
+    assert(var_name);
+    assert(filename);
+    assert(image_file);
 
-    FILE *file = fopen("alldump.html", "a");
-    if (!file) {
-        printf("Failed to open file %s\n", "alldump.hml");
-        return;
-    }
-
-    fprintf(file, "<h3> DUMP </h3>\n");
+    fprintf(file, "<h2> DUMP </h2>\n");
+    fprintf(file, "%s {%s}\n", var_name, filename);
 
     time_t now = time(NULL);
     struct tm *tm_now = localtime(&now);
 
-    char buf[64] = {};
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm_now);
+    char buf_time[64] = {};
+    strftime(buf_time, sizeof(buf_time), "%Y-%m-%d %H:%M:%S\n", tm_now);
+    fprintf(file, "%s\n", buf_time);
 
-    fprintf(file, "%s", buf);
+    fprintf(file, "<h4 style=\"margin: 3px 0;\"> Size: %d </h4>\n", list->size);
+    fprintf(file, "<h4 style=\"margin: 3px 0;\"> Number of elements: %d </h4>\n", list->number_of_elem);
+    fprintf(file, "<h4 style=\"margin: 3px 0;\"> Head: %d </h4>\n", list->head);
+    fprintf(file, "<h4 style=\"margin: 3px 0;\"> Tail: %d </h4>\n", list->tail);
+    fprintf(file, "<h4 style=\"margin: 3px 0;\"> Free: %d </h4>\n", list->free);
 
-    fprintf(file, "<h4> Size: %d </h4>", list->size);
-    fprintf(file, "<h4> number of elements: %d </h4>", list->number_of_elem);
-    fprintf(file, "<h4> Head: %d </h4>", list->head);
-    fprintf(file, "<h4> Tail: %d </h4>", list->tail);
-    fprintf(file, "<h4> Free: %d </h4>", list->free);
+    fprintf(file, "<table border=\"1\" style=\"border-collapse: collapse; width: 30%%; font-size: 18px; text-align: center; margin-left: 10px;\">\n");
 
-    fprintf(file, "<h4> Index ||");
+
+    fprintf(file, "<tr>");
+    fprintf(file, "<th style=\"padding: 10px 24px; text-align: center;\">Index</th>");
     for (int i = 1; i <= list->size; i++) {
-        fprintf(file, " %d |", i);
+        fprintf(file, "<th style=\"padding: 10px 24px; text-align: center;\">%d</th>", i);
     }
-    fprintf(file, "</h4>\n");
+    fprintf(file, "</tr>\n");
 
-    fprintf(file, "<h4> Data ||");
+    fprintf(file, "</tr>\n");
+    fprintf(file, "<td style=\"padding: 10px 24px; text-align: center;\">Data</td>");
     for (int i = 1; i <= list->size; i++) {
-        fprintf(file, " %.0f |", list->data[i]);
+        fprintf(file, "<td>%.0f</td>", list->data[i]);
     }
-    fprintf(file, "</h4>\n");
+    fprintf(file, "</tr>\n");
 
-    fprintf(file, "<h4> Next |");
+    fprintf(file, "</tr>\n");
+    fprintf(file, "<td style=\"padding: 10px 24px; text-align: center;\">Next</td>");
     for (int i = 1; i <= list->size; i++) {
-        fprintf(file, " %d |", list->next[i]);
+        fprintf(file, "<td>%d</td>", list->next[i]);
     }
-    fprintf(file, "</h4>\n");
+    fprintf(file, "</tr>\n");
 
-
-    fprintf(file, "<h4> Prev ||");
+    fprintf(file, "</tr>\n");
+    fprintf(file, "<td style=\"padding: 10px 24px; text-align: center;\">Prev</td>");
     for (int i = 1; i <= list->size; i++) {
-        fprintf(file, " %d |", list->prev[i]);
+        fprintf(file, "<td>%d</td>", list->prev[i]);
     }
-    fprintf(file, "</h4>\n");
+    fprintf(file, "</tr>\n");
 
-    fprintf(file, "<img src = graph.png>");
+    fprintf(file, "</table>\n");
+
+    fprintf(file, "<br><br>\n");
+
+    fprintf(file, "<img src = %s>", image_file);
+    fprintf(file, "<br><br>");
 }

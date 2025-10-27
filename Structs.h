@@ -37,4 +37,10 @@ typedef enum {
     kNoChange,
 } Realloc_Mode;
 
+typedef enum {
+    kInsert,
+    kDelete,
+    kDump,
+ } ListCommands;
+
 #endif //STRUCTS_H_
