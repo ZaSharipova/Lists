@@ -12,14 +12,14 @@
     snprintf(img_name, sizeof(img_name), "graph_%d.png", graph_counter++); \
     snprintf(cmd, sizeof(cmd), "dot output.txt -T png -o %s", img_name);   \
     system(cmd);                                                           \
-    DoDump(file, &list, #list, __FILE__, img_name);                        \
+    DoDump(file, &list, #list, __FILE__, img_name, kDump, type_of_change);                        \
     func;                                                                  \
     ListDump(&list);                                                       \
     DumpListToGraphviz(&list, "output.txt", pos, type_of_change);          \
     snprintf(img_name, sizeof(img_name), "graph_%d.png", graph_counter++); \
     snprintf(cmd, sizeof(cmd), "dot output.txt -T png -o %s", img_name);   \
     system(cmd);                                                           \
-    DoDump(file, &(list), #list, __FILE__, img_name);                      \
+    DoDump(file, &(list), #list, __FILE__, img_name, type_of_change, kDump);                      \
 
 
 int main(void) {
@@ -43,6 +43,8 @@ int main(void) {
     // ListDump(&list);
     DoChange(InsertElement(&list, 3, 25), list, 3, kInsert);
     // InsertElement(&list, 3, 25);
+    DoChange(InsertElement(&list, 4, 26), list, 4, kInsert);
+    DoChange(InsertElement(&list, 5, 25), list, 5, kInsert);
     //InsertList(&list, 2, 40);
     // ListDump(&list);
     DoChange(DeleteElement(&list, 3), list, 3, kDelete);

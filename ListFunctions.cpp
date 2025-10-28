@@ -31,11 +31,12 @@ ListErrors ListCtor(List *list) {
     list->prev[0] = 0;
     list->next[0] = 0;
 
-    for (size_t i = 1; i <= list->size; i++) {
-        list->data[i] = POISON;
-        list->next[i] = i + 1;
-        list->prev[i] = -1;
-    }
+    FillList(list);
+    // for (size_t i = 1; i <= list->size; i++) {
+    //     list->data[i] = POISON;
+    //     list->next[i] = i + 1;
+    //     list->prev[i] = -1;
+    // }
 
     list->head = 0;
     list->tail = 0;
@@ -135,6 +136,7 @@ ListErrors ResizeList(List *list, Realloc_Mode realloc_type) {
     list->data = realloc_data;
     list->next = realloc_next;
     list->prev = realloc_prev;
+    FillList(list);
 
     CHECK_ERROR_RETURN(ListVerify(list));
     return err;
@@ -294,4 +296,16 @@ ListErrors ListDtor(List *list) {
     list->number_of_elem = 0;
 
     return kSuccess;
+}
+
+void FillList(List *list) {
+    assert(list);
+
+    for (int i = 1; i <= list->size; i++) {
+        if (list->prev[i] == 0 && i != list->tail) {
+            list->prev[i] = -1;
+            list->data[i] = POISON;
+            list->next[i] = i + 1;
+        }
+    }
 }

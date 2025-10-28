@@ -28,7 +28,7 @@ void DumpListToGraphviz(List *list, const char *filename, int pos, ListCommands 
             fprintf(file, "fillcolor = \"#FF0000\", color = \"#8B0000\"];\n");
             }
         } else {
-            fprintf(file, "fillcolor = \"#FFE4B5\", color = \"#FFE4B5\"];\n");
+            fprintf(file, "fillcolor = \"#FFE4B5\", color = \"#CD853F\"];\n");
         }
 
     }
@@ -43,7 +43,7 @@ void DumpListToGraphviz(List *list, const char *filename, int pos, ListCommands 
     fprintf(file, "\n\n");
 
     for (int i = 1; i <= list->size; i++) {
-        if (list->prev[i] != -1 && list->next[i] != 0) {
+        if ((list->free != i) && list->next[i] != 0 && (i <= list->number_of_elem)) {
             fprintf(file, "    node%d -> node%d [label=\"next\"];\n", 
             i, list->next[i]);
         }

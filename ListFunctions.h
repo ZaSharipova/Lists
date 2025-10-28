@@ -19,4 +19,7 @@ ListErrors ListDtor(List *list);
 ListErrors ResizeList(List *list, Realloc_Mode realloc_type);
 ListErrors InsertElement(List *lists, int pos, List_t number_to_put);
 ListErrors DeleteElement(List *lists, int pos);
+
+void FillList(List *list);
+
 #endif //LIST_FUNCTIONS_H_
