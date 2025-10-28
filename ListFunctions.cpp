@@ -7,7 +7,7 @@
 #include "Colors.h"
 
 #define POISON 66666
-#define DEFAULT_LIST_SIZE 4
+#define DEFAULT_LIST_SIZE 6
 
 #define INCREASE_VALUE 2
 #define DECREASE_VALUE 4
@@ -19,9 +19,9 @@ ListErrors ListCtor(List *list) {
 
     list->size = DEFAULT_LIST_SIZE;
 
-    list->data = (List_t *) calloc (list->size + 1, sizeof(List_t));
-    list->next = (int *) calloc (list->size + 1, sizeof(int));
-    list->prev = (int *) calloc (list->size + 1, sizeof(int));
+    list->data = (List_t *) calloc (list->size, sizeof(List_t));
+    list->next = (int *) calloc (list->size, sizeof(int));
+    list->prev = (int *) calloc (list->size, sizeof(int));
     if (list->data == NULL || list->next == NULL || list->prev == NULL) {
         printf("No memory in ListCtor to create list.\n");
         return kNoMemory;
@@ -38,6 +38,7 @@ ListErrors ListCtor(List *list) {
     //     list->prev[i] = -1;
     // }
 
+    //list->next[list->size - 1] = 0;
     list->head = 0;
     list->tail = 0;
     list->free = 1;
@@ -119,13 +120,13 @@ ListErrors ResizeList(List *list, Realloc_Mode realloc_type) {
     }
 
     List_t *ptr_data = list->data;
-    List_t *realloc_data = (List_t *) realloc (ptr_data, (size_t)(list->size + 1) * sizeof(*realloc_data));
+    List_t *realloc_data = (List_t *) realloc (ptr_data, (size_t)(list->size) * sizeof(*realloc_data));
 
     int *ptr_int = list->next;
-    int *realloc_next = (int *) realloc (ptr_int, (size_t)(list->size + 1) * sizeof(*realloc_next));
+    int *realloc_next = (int *) realloc (ptr_int, (size_t)(list->size) * sizeof(*realloc_next));
 
     ptr_int = list->prev;
-    int *realloc_prev = (int *) realloc (ptr_int, (size_t)(list->size + 1) *sizeof(*realloc_prev));
+    int *realloc_prev = (int *) realloc (ptr_int, (size_t)(list->size) *sizeof(*realloc_prev));
 
 
     if (realloc_data == NULL || realloc_next == NULL || realloc_prev == NULL) {
@@ -155,44 +156,24 @@ ListErrors InsertElement(List *list, int pos, List_t value) {
         }
     }
 
-    list->data[list->free] = value;
-
     int new_index = list->free;
-    list->free = list->next[list->free];
+    list->free = list->prev[new_index];
 
-    if (list->number_of_elem == 0) {
-        list->head = new_index;
-        list->tail = new_index;
-        list->prev[new_index] = 0;
-        list->next[new_index] = 0;
-        list->number_of_elem++;
-        return kSuccess;
-    }
+    list->data[new_index] = value;
 
-    if (pos == 0) {
-        list->next[new_index] = list->head;
-        list->prev[new_index] = 0;
-        list->prev[list->head] = new_index;
-        list->head = new_index;
+    list->prev[new_index] = pos;
 
-    } else if (pos >= list->tail) {
-        list->next[list->tail] = new_index;
-        list->next[new_index] = 0;
-        list->prev[new_index] = list->tail;
-        list->tail = new_index;
-
-    } else {
-        list->next[new_index] = list->next[pos];
-        list->prev[list->next[pos]] = new_index;
-        list->next[pos] = new_index;
-        list->prev[new_index] = pos;
-    }
-    
+    list->prev[list->next[pos]] = new_index;
+    list->next[new_index] = list->next[pos];
+    list->next[pos] = new_index;
 
     list->number_of_elem++;
     CHECK_ERROR_RETURN(ListVerify(list));
     return kSuccess;
 }
+
+
+
 
 ListErrors DeleteElement(List *list, int pos) {
     assert(list);
@@ -207,35 +188,12 @@ ListErrors DeleteElement(List *list, int pos) {
         }
     }
 
-    if (list->size == 0) {
-        return kZeroSize;
-    }
+    list->next[list->prev[pos]] = list->next[pos];
+    list->prev[list->next[pos]] = list->prev[pos];
 
-    if (list->number_of_elem == 0 || pos <= 0) {
-        return kInvalidParam;
-    }
-
-    list->data[pos] = 0;
-
-    if (pos == list->head) {
-        list->head = list->next[pos];
-        list->prev[list->head] = 0;
-    }
-    
-    else if (pos == list->tail) {
-        list->tail = list->prev[pos];
-        list->next[list->tail] = 0;
-    }
-    
-    else {
-        int prev_elem = list->prev[pos];
-        int next_elem = list->next[pos];
-        list->next[prev_elem] = next_elem;
-        list->prev[next_elem] = prev_elem; //
-    }
-
-    list->next[pos] = list->free;
-    list->prev[pos] = -1;
+    list->data[pos] = POISON;
+    list->next[pos] = 0;
+    list->prev[pos] = list->free;
     list->free = pos;
 
     list->number_of_elem--;
@@ -250,27 +208,27 @@ ListErrors ListDump(List *list) {
 
     printf("size: %d\n\n", list->size);
 
-    for (size_t i = 0; i <= list->size; i++) {
+    for (size_t i = 0; i < list->size; i++) {
         printf("%lu ", i);
     }
     printf("\n");
 
     printf("===============Data===============:\n");
-    for (size_t i = 0; i <= list->size; i++) {
+    for (size_t i = 0; i < list->size; i++) {
         printf(YELLOW "%.0f " RESET, list->data[i]);
     }
     printf("\n\n");
 
     printf("head: %d\n", list->head);
     printf("===============Next===============:\n");
-    for (size_t i = 0; i <= list->size; i++) {
+    for (size_t i = 0; i < list->size; i++) {
         printf(YELLOW "%d " RESET, list->next[i]);
     }
     printf("\n\n");
 
     printf("tail: %d\n", list->tail);
     printf("===============Prev===============:\n");
-    for (size_t i = 0; i <= list->size; i++) {
+    for (size_t i = 0; i < list->size; i++) {
         printf(YELLOW "%d " RESET, list->prev[i]);
     }
     printf("\n\n");
@@ -299,13 +257,11 @@ ListErrors ListDtor(List *list) {
 }
 
 void FillList(List *list) {
-    assert(list);
-
-    for (int i = 1; i <= list->size; i++) {
-        if (list->prev[i] == 0 && i != list->tail) {
-            list->prev[i] = -1;
-            list->data[i] = POISON;
-            list->next[i] = i + 1;
-        }
+    for (int i = 1; i < list->size; i++) {
+        list->data[i] = POISON;
+        list->next[i] = i + 1;
+        list->prev[i] = i + 1;
     }
+    list->next[list->size - 1] = 0;
+    list->prev[1] = 2;
 }

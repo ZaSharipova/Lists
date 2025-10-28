@@ -41,28 +41,28 @@ void DoDump(FILE *file, List *list, const char *var_name, const char *filename, 
 
     fprintf(file, "<tr>");
     fprintf(file, "<th style=\"padding: 10px 24px; text-align: center;\">Index</th>");
-    for (int i = 1; i <= list->size; i++) {
+    for (int i = 1; i < list->size; i++) {
         fprintf(file, "<th style=\"padding: 10px 24px; text-align: center;\">%d</th>", i);
     }
     fprintf(file, "</tr>\n");
 
     fprintf(file, "</tr>\n");
     fprintf(file, "<td style=\"padding: 10px 24px; text-align: center;\">Data</td>");
-    for (int i = 1; i <= list->size; i++) {
+    for (int i = 1; i < list->size; i++) {
         fprintf(file, "<td>%.0f</td>", list->data[i]);
     }
     fprintf(file, "</tr>\n");
 
     fprintf(file, "</tr>\n");
     fprintf(file, "<td style=\"padding: 10px 24px; text-align: center;\">Next</td>");
-    for (int i = 1; i <= list->size; i++) {
+    for (int i = 1; i < list->size; i++) {
         fprintf(file, "<td>%d</td>", list->next[i]);
     }
     fprintf(file, "</tr>\n");
 
     fprintf(file, "</tr>\n");
     fprintf(file, "<td style=\"padding: 10px 24px; text-align: center;\">Prev</td>");
-    for (int i = 1; i <= list->size; i++) {
+    for (int i = 1; i < list->size; i++) {
         fprintf(file, "<td>%d</td>", list->prev[i]);
     }
     fprintf(file, "</tr>\n");
