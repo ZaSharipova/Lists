@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 
-typedef  double List_t;
+typedef double List_t;
+
+#define POISON 66666
 
 struct List {
     int size;

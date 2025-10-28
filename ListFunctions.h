@@ -17,7 +17,8 @@ ListErrors ListDump(List *lists);
 ListErrors ListDtor(List *list);
 
 ListErrors ResizeList(List *list, Realloc_Mode realloc_type);
-ListErrors InsertElement(List *lists, int pos, List_t number_to_put);
+ListErrors InsertElementAfterPosition(List *lists, int pos, List_t number_to_put);
+ListErrors InsertElementBeforePosition(List *list, int pos, List_t value);
 ListErrors DeleteElement(List *lists, int pos);
 
 void FillList(List *list, int pos);

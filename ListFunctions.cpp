@@ -143,7 +143,7 @@ ListErrors ResizeList(List *list, Realloc_Mode realloc_type) {
     return err;
 }
 
-ListErrors InsertElement(List *list, int pos, List_t value) {
+ListErrors InsertElementAfterPosition(List *list, int pos, List_t value) {
     assert(list);
 
     ListErrors err = kSuccess;
@@ -157,7 +157,7 @@ ListErrors InsertElement(List *list, int pos, List_t value) {
     }
 
     int new_index = list->free;
-    list->free = list->prev[new_index];
+    list->free = list->next[new_index];
 
     list->data[new_index] = value;
 
@@ -172,6 +172,35 @@ ListErrors InsertElement(List *list, int pos, List_t value) {
     return kSuccess;
 }
 
+ListErrors InsertElementBeforePosition(List *list, int pos, List_t value) {
+    assert(list);
+
+    ListErrors err = kSuccess;
+    CHECK_ERROR_RETURN(ListVerify(list));
+
+    if (list->number_of_elem == list->size - 2) {
+        Realloc_Mode realloc_type = CheckSize(list);
+        if (realloc_type != kNoChange) {
+            CHECK_ERROR_RETURN(ResizeList(list, realloc_type));
+        }
+    }
+
+    int new_index = list->free;
+    list->free = list->next[new_index];
+
+    list->data[new_index] = value;
+
+    list->next[new_index] = pos;
+    list->prev[new_index] = list->prev[pos];
+
+    list->next[list->prev[pos]] = new_index;
+    list->prev[pos] = new_index;
+
+
+    list->number_of_elem++;
+    CHECK_ERROR_RETURN(ListVerify(list));
+    return kSuccess;
+}
 ListErrors DeleteElement(List *list, int pos) {
     assert(list);
 
@@ -189,8 +218,8 @@ ListErrors DeleteElement(List *list, int pos) {
     list->prev[list->next[pos]] = list->prev[pos];
 
     list->data[pos] = POISON;
-    list->next[pos] = 0;
-    list->prev[pos] = list->free;
+    list->next[pos] = list->free;
+    list->prev[pos] = -1;
     list->free = pos;
 
     list->number_of_elem--;
@@ -256,9 +285,9 @@ ListErrors ListDtor(List *list) {
 void FillList(List *list, int pos) {
     for (int i = pos + 1; i < list->size; i++) {
         list->data[i] = POISON;
-        list->next[i] = -1;
-        list->prev[i] = i + 1;
+        list->next[i] = i + 1;
+        list->prev[i] = -1;
     }
     // list->next[list->size - 1] = 0;
-    list->prev[1] = 2;
+    list->next[1] = 2;
 }
