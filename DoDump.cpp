@@ -7,6 +7,14 @@
 #include <assert.h>
 
 static const char *command_to_str(ListCommands type_of_command);
+static void PrintCurrentTime(FILE *file, const char *label);
+static void PrintListInfoItem(FILE *file, const char *label, int value);
+
+static void PrintTableStart(FILE *file);
+static void PrintTableEnd(FILE *file);
+static void PrintTableHeader(FILE *file, int size);
+static void PrintTableRowData(FILE *file, const char *label, int size, int *array);
+static void PrintTableRowListSpec(FILE *file, const char *label, int size, List *list);
 
 void DoDump(ChangeOperationContext *Info) {
     assert(Info);
@@ -34,53 +42,24 @@ void DoDump(ChangeOperationContext *Info) {
     }
     fprintf(Info->file, "<h4 style=\"margin: 3px 0;\">%s {%s} </h4>\n", Info->var_name, Info->filename);
 
-    time_t now = time(NULL);
-    struct tm *tm_now = localtime(&now);
-
-    char buf_time[64] = {};
-    strftime(buf_time, sizeof(buf_time), "%Y-%m-%d %H:%M:%S\n", tm_now);
-    fprintf(Info->file, "<h4 style=\"margin: 3px 0;\"> made: %s</h4>\n", buf_time);
-    fprintf(Info->file, "<br>");
-
-    fprintf(Info->file, "<h4 style=\"margin: 3px 0;\"> Capacity: %d </h4>\n", Info->list->size);
-    fprintf(Info->file, "<h4 style=\"margin: 3px 0;\"> Size: %d </h4>\n", Info->list->number_of_elem);
-    fprintf(Info->file, "<h4 style=\"margin: 3px 0;\"> Head: %d </h4>\n", Info->list->next[0]);
-    fprintf(Info->file, "<h4 style=\"margin: 3px 0;\"> Tail: %d </h4>\n", Info->list->prev[0]);
-    fprintf(Info->file, "<h4 style=\"margin: 3px 0;\"> Free: %d </h4>\n", Info->list->free);
+    PrintCurrentTime(Info->file, "made");
 
     fprintf(Info->file, "<br>");
-    fprintf(Info->file, "<table border=\"2\" style=\"border-radius: 5px; overflow: hidden; border-collapse: separate; border-spacing: 0; width: 30%%; font-size: 18px; text-align: center; margin-left: 0px;\">\n");
 
-    //fprintf(file, "<table style=\"border: 2px solid black\">");
-    fprintf(Info->file, "<tr>");
-    fprintf(Info->file, "<th style=\"padding: 10px 24px; align: left; text-align: center; background-color: #fbf5eef2;\">Index</th>");
-    for (int i = 0; i < Info->list->size; i++) {
-        fprintf(Info->file, "<th style=\"padding: 10px 24px; text-align: center; background-color: #fbf5eef2\">%d</th>", i);
-    }
-    fprintf(Info->file, "</tr>\n");
+    PrintListInfoItem(Info->file, "Capacity", Info->list->size);
+    PrintListInfoItem(Info->file, "Size", Info->list->number_of_elem);
+    PrintListInfoItem(Info->file, "Head", Info->list->next[0]);
+    PrintListInfoItem(Info->file, "Tail", Info->list->prev[0]);
+    PrintListInfoItem(Info->file, "Free", Info->list->free);
 
-    fprintf(Info->file, "</tr>\n");
-    fprintf(Info->file, "<td style=\"padding: 10px 24px; text-align: center; background-color: #fbf5eef2;\">Data</td>");
-    for (int i = 0; i < Info->list->size; i++) {
-        fprintf(Info->file, "<td> " LIST_SPEC" </td>", Info->list->data[i]);
-    }
-    fprintf(Info->file, "</tr>\n");
+    fprintf(Info->file, "<br>");
 
-    fprintf(Info->file, "</tr>\n");
-    fprintf(Info->file, "<td style=\"padding: 10px 24px; text-align: center; background-color: #fbf5eef2;\">Next</td>");
-    for (int i = 0; i < Info->list->size; i++) {
-        fprintf(Info->file, "<td>%d</td>", Info->list->next[i]);
-    }
-    fprintf(Info->file, "</tr>\n");
-
-    fprintf(Info->file, "</tr>\n");
-    fprintf(Info->file, "<td style=\"padding: 10px 24px; text-align: center; background-color: #fbf5eef2; \">Prev</td>");
-    for (int i = 0; i < Info->list->size; i++) {
-        fprintf(Info->file, "<td>%d</td>", Info->list->prev[i]);
-    }
-    fprintf(Info->file, "</tr>\n");
-
-    fprintf(Info->file, "</table>\n");
+    PrintTableStart(Info->file);
+    PrintTableHeader(Info->file, Info->list->size);
+    PrintTableRowListSpec(Info->file, "Data", Info->list->size, Info->list);
+    PrintTableRowData(Info->file, "Next", Info->list->size, Info->list->next);
+    PrintTableRowData(Info->file, "Prev", Info->list->size, Info->list->prev);
+    PrintTableEnd(Info->file);
 
     fprintf(Info->file, "<br><br>\n");
 
@@ -97,4 +76,73 @@ static const char *command_to_str(ListCommands type_of_command) {
     } else {
         return "DELETE";
     }
+}
+
+static void PrintCurrentTime(FILE *file, const char *label) {
+    assert(file);
+    assert(label);
+
+    time_t now = time(NULL);
+    struct tm *tm_now = localtime(&now);
+
+    char buf_time[64] = {};
+    strftime(buf_time, sizeof(buf_time), "%Y-%m-%d %H:%M:%S\n", tm_now);
+
+    fprintf(file, "<h4 style=\"margin: 3px 0;\">%s: %s</h4>\n", label, buf_time);
+}
+
+static void PrintListInfoItem(FILE *file, const char *label, int value) {
+    assert(file);
+    assert(label);
+
+    fprintf(file, "<h4 style=\"margin: 3px 0;\"> %s: %d </h4>\n", label, value);
+}
+
+static void PrintTableStart(FILE *file) {
+    assert(file);
+
+    fprintf(file, "<table border=\"2\" style=\"border-radius: 5px; overflow: hidden; border-collapse: separate; border-spacing: 0; width: 30%%; font-size: 18px; text-align: center; margin-left: 0px;\">\n");
+}
+
+static void PrintTableEnd(FILE *file) {
+    assert(file);
+
+    fprintf(file, "</table>\n");
+}
+
+static void PrintTableHeader(FILE *file, int size) {
+    assert(file);
+
+    fprintf(file, "<tr>");
+    fprintf(file, "<th style=\"padding: 10px 24px; align: left; text-align: center; background-color: #fbf5eef2;\">Index</th>");
+    for (int i = 0; i < size; i++) {
+        fprintf(file, "<th style=\"padding: 10px 24px; text-align: center; background-color: #fbf5eef2\">%d</th>", i);
+    }
+    fprintf(file, "</tr>\n");
+}
+
+static void PrintTableRowData(FILE *file, const char *label, int size, int *array) {
+    assert(file);
+    assert(label);
+    assert(array);
+
+    fprintf(file, "<tr>");
+    fprintf(file, "<td style=\"padding: 10px 24px; text-align: center; background-color: #fbf5eef2;\">%s</td>", label);
+    for (int i = 0; i < size; i++) {
+        fprintf(file, "<td>%d</td>", array[i]);
+    }
+    fprintf(file, "</tr>\n");
+}
+
+static void PrintTableRowListSpec(FILE *file, const char *label, int size, List *list) {
+    assert(file);
+    assert(label);
+    assert(list);
+
+    fprintf(file, "<tr>");
+    fprintf(file, "<td style=\"padding: 10px 24px; text-align: center; background-color: #fbf5eef2;\">%s</td>", label);
+    for (int i = 0; i < size; i++) {
+        fprintf(file, "<td> " LIST_SPEC " </td>", list->data[i]);
+    }
+    fprintf(file, "</tr>\n");
 }

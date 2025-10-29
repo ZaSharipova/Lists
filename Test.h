@@ -5,11 +5,11 @@
 
 #include "Structs.h"
 
-#define DOCHANGE(file, func, list, pos, value, type_of_command)                          \
-    err = DoChangeFunc(file, func, &list, pos, value, type_of_command, __FILE__, #list); \
-    if (err != 0) {                                                                      \
-        return err;                                                                      \
-    }
+// #define DOCHANGE(file, func, list, pos, value, type_of_command)                          \
+//     err = DoChangeFunc(file, func, &list, pos, value, type_of_command, __FILE__, #list); \
+//     if (err != 0) {                                                                      \
+//         return err;                                                                      \
+//     }
 
 ListErrors Test1(FILE *file, List *list); 
 ListErrors Test2(FILE *file, List *list); 

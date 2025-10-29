@@ -9,8 +9,6 @@
 typedef int List_t;
 #define LIST_SPEC "%d"
 
-#define POISON 66666
-
 struct List {
     int size;
     List_t *data;
@@ -27,9 +25,8 @@ typedef struct ChangeOperationContext {
     const char *filename;      
 
     int pos;
-    int default_pos;
-    int free;
     List_t number;
+    int graph_counter;
 
     ListCommands type_of_command_before;
     ListCommands type_of_command_after;

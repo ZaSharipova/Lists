@@ -25,4 +25,7 @@ ListErrors DoChangeFunc(FILE *file, ListErrors (*func)(List*, int, List_t), List
 
 void FillList(List *list, int pos);
 
+void DoAllDump(ChangeOperationContext *Info);
+ListCommands FuncNameToEnum(const char *func_name);
+
 #endif //LIST_FUNCTIONS_H_

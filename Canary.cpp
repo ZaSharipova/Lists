@@ -39,12 +39,9 @@ ListErrors MakeCanary(List *list) {
     assert(list);
 
 #ifdef _DEBUG
-
-    //list->data[0] = stack_ptr + 1;
     list->data[0] = (List_t)canary_left;
     list->data[list->size - 1] = (List_t)canary_right;
-
-    return kSuccess;
 #endif
+
     return kSuccess;
 }

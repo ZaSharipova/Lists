@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "Structs.h"
 #include "Colors.h"
@@ -17,7 +18,7 @@
 #define DEFAULT_STROKE_SIZE 64
 #define DEFAULT_LIST_SIZE 4
 
-static void DoSnprintf(ChangeOperationContext *Info, int *graph_counter);
+static void DoSnprintf(ChangeOperationContext *Info);
 static ListErrors DoCallocCtor(List *list);
 static Realloc_Mode CheckSize(List *list);
 static ListErrors ResizeList(List *list, Realloc_Mode realloc_type);
@@ -130,7 +131,6 @@ static Realloc_Mode CheckSize(List *list) {
 
     if (list->number_of_elem + INCREASE_VALUE >= list->size) {
         return kIncrease;
-
     }
 
     if (list->size == 0) {
@@ -208,6 +208,11 @@ ListErrors InsertElementAfterPosition(List *list, int pos, List_t value) {
     Realloc_Mode realloc_type = CheckSize(list);
      if (realloc_type != kNoChange) {
         CHECK_ERROR_RETURN(ResizeList(list, realloc_type));
+    }
+
+    if (pos < 0 || pos >= list->size) {
+        fprintf(stderr, "Wrong pos entered.\n");
+        return kInvalidParam;
     }
 
     int new_index = list->free;
@@ -305,7 +310,7 @@ void FillList(List *list, int pos) {
 
     for (int i = pos + 1; i < list->size; i++) {
         list->data[i] = POISON;
-        list->next[i] = (i + 1 < list->size) ? (i + 1) : 0;
+        list->next[i] = i + 1;
         list->prev[i] = -1;
     }
 
@@ -363,41 +368,82 @@ ListErrors ListDump(List *list, unsigned int error) {
     return (ListErrors)error;
 }
 
-ListErrors DoChangeFunc(FILE *file, ListErrors (*func)(List*, int, List_t), List *list, int pos, List_t value, 
-    ListCommands type_of_change, const char *file_name, const char *list_name) {
-    assert(func);
-    assert(list);
-    assert(file_name);
-    assert(list_name);
+// ListErrors DoChangeFunc(FILE *file, ListErrors (*func)(List*, int, List_t), List *list, int pos, List_t value, 
+//     ListCommands type_of_change, const char *file_name, const char *list_name) {
+//     assert(func);
+//     assert(list);
+//     assert(file_name);
+//     assert(list_name);
 
-    static int graph_counter = 0;
+//     static int graph_counter = 0;
+    
+//     ChangeOperationContext Info = {file, list, list_name, file_name, pos, value, kDump, type_of_change};
+//     DoAllDump(&Info, &graph_counter);
 
-    ChangeOperationContext Info = {file, list, list_name, file_name, 0, DEFAULT_POS, list->free, value, kDump, type_of_change};
-    DumpListToGraphviz(&Info);
-    DoSnprintf(&Info, &graph_counter);
+//     ListErrors err = kSuccess;
+//     CHECK_ERROR_RETURN(func(list, pos, value));
 
-    Info.pos = pos, Info.type_of_command_before = kDump, Info.type_of_command_after = type_of_change;
-    DoDump(&Info);
+//     Info.type_of_command_before = type_of_change, Info.type_of_command_after = kDump;   
+//     DoAllDump(&Info, &graph_counter);
 
-    ListErrors err = kSuccess;
-    CHECK_ERROR_RETURN(func(list, pos, value));
+//     return kSuccess;
+// }
 
-    Info.type_of_command_before = type_of_change, Info.type_of_command_after = kDump;   
-    DumpListToGraphviz(&Info);
-    DoSnprintf(&Info, &graph_counter);
+ListCommands FuncNameToEnum(const char *func_name) {
+    assert(func_name);
 
-    DoDump(&Info);
-    return kSuccess;
+    if (strncmp(func_name, "InsertElementAfterPosition", 27) == 0) {
+        return kInsertAfter;
+
+    } else if (strncmp(func_name, "InsertElementBeforePosition", 28) == 0) {
+        return kInsertBefore;
+
+    } else if (strncmp(func_name, "DeleteElement", 14) == 0) {
+        return kDelete;
+
+    }
+    return kDump;
+
+}
+void DoAllDump(ChangeOperationContext *Info) {
+    assert(Info);
+
+    DumpListToGraphviz(Info);
+    DoSnprintf(Info);
+
+    DoDump(Info);
 }
 
-static void DoSnprintf(ChangeOperationContext *Info, int *graph_counter) {
+static void DoSnprintf(ChangeOperationContext *Info) {
     assert(Info);
-    assert(graph_counter);
 
-    snprintf(Info->image_file, sizeof(Info->image_file), "Images/graph_%d.svg", *graph_counter);
-    (*graph_counter)++;
+    snprintf(Info->image_file, sizeof(Info->image_file), "Images/graph_%d.svg", Info->graph_counter);
+    (Info->graph_counter)++;
     char cmd[DEFAULT_STROKE_SIZE] = {};
     snprintf(cmd, sizeof(cmd), "dot output.txt -T svg -o %s", Info->image_file);
     
     system(cmd);
 }
+
+// ListErrors ListDumpBefore(ChangeOperationContext *Info, int *graph_counter, int pos, ListCommands type_of_change) {
+//     DumpListToGraphviz(Info);
+//     DoSnprintf(Info, graph_counter);
+
+//     Info->pos = pos, Info->type_of_command_before = kDump, Info->type_of_command_after = type_of_change;
+//     DoDump(Info);
+// }
+
+// ListErrors ListDumpAfter(ChangeOperationContext *Info, int *graph_counter, int pos, ListCommands type_of_change) {
+//     assert(Info);
+//     assert(graph_counter);
+
+//     ListErrors err = kSuccess;
+
+//     Info->type_of_command_before = type_of_change, Info->type_of_command_after = kDump;   
+//     CHECK_ERROR_RETURN(DumpListToGraphviz(Info));
+//     DoSnprintf(Info, graph_counter);
+
+//     DoDump(Info);
+
+//     return kSuccess;
+// }

@@ -6,7 +6,12 @@
 #define FILE_FOR_GRAPH_TEXT "output.txt"
 #define WRITE_MODE "w"
 
-#define POISON 66666
+#define POISON 666
+
+typedef struct {
+    const char *fillColor;
+    const char *borderColor;
+} FillAndBorderColor;
 
 #define RED "\033[31m"
 #define RESET "\033[0m"

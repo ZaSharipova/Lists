@@ -12,12 +12,12 @@ int main(void) {
         return kErrorOpening;
     }
 
-    List list = {};
-    ListCtor(&list); //
-
     ListErrors err = kSuccess;
-    CHECK_ERROR_RETURN(Test5(file, &list));
+    List list = {};
+    CHECK_ERROR_RETURN(ListCtor(&list));
 
-    ListDtor(&list); //
+    CHECK_ERROR_RETURN(Test1(file, &list));
+
+    ListDtor(&list);
     return CloseFile(file);
 }
