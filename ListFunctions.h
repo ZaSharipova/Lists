@@ -13,13 +13,15 @@
 
 ListErrors ListCtor(List *lists);
 ListErrors ListVerify(List *lists);
-ListErrors ListDump(List *lists);
+ListErrors ListDump(List *lists, unsigned int error);
 ListErrors ListDtor(List *list);
 
-ListErrors ResizeList(List *list, Realloc_Mode realloc_type);
 ListErrors InsertElementAfterPosition(List *lists, int pos, List_t number_to_put);
 ListErrors InsertElementBeforePosition(List *list, int pos, List_t value);
-ListErrors DeleteElement(List *lists, int pos);
+ListErrors DeleteElement(List *lists, int pos, List_t value);
+
+ListErrors DoChangeFunc(FILE *file, ListErrors (*func)(List*, int, List_t), List *list, int pos, List_t value, 
+    ListCommands type_of_change, const char *file_name, const char *list_name);
 
 void FillList(List *list, int pos);
 

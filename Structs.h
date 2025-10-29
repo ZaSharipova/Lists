@@ -3,7 +3,11 @@
 
 #include <stdio.h>
 
-typedef double List_t;
+#include "Enums.h"
+#define MAX_STRING_SIZE 64
+
+typedef int List_t;
+#define LIST_SPEC "%d"
 
 #define POISON 66666
 
@@ -12,37 +16,25 @@ struct List {
     List_t *data;
     int *next;
     int *prev;
-    int head;
-    int tail;
     int free;
     int number_of_elem;
 };
 
-typedef enum {
-    kSuccess = 0,
-    kNoMemory = -1,
-    kNullData = -2,
-    kNullNext = -3,
-    kNullPrev = -4,
-    kInvalidParam = -5,
-    kNegativeHead = -6,
-    kNegativeTail = -7,
-    kNegativeFree = -8,
-    kZeroSize = -9,
-    kFailure = -10,
-} ListErrors;
+typedef struct ChangeOperationContext {
+    FILE *file;
+    List *list;
+    const char *var_name;
+    const char *filename;      
 
-typedef enum {
-    kIncrease,
-    kDecrease,
-    kIncreaseZero,
-    kNoChange,
-} Realloc_Mode;
+    int pos;
+    int default_pos;
+    int free;
+    List_t number;
 
-typedef enum {
-    kInsert,
-    kDelete,
-    kDump,
- } ListCommands;
+    ListCommands type_of_command_before;
+    ListCommands type_of_command_after;
+
+    char image_file[MAX_STRING_SIZE];
+} ChangeOperationContext;
 
 #endif //STRUCTS_H_
