@@ -86,6 +86,22 @@ ListErrors ListVerify(List *list) {
         error |= kInvalidFree;
     }
 
+    for (int i = 0; i < list->size; i++) {
+        if (list->data[i] == POISON && list->prev[i] != -1 && i != list->size - 1) {
+            printf("sdfgh");
+            error |= kInvalidUnusedPos;
+            return (ListErrors)error;
+        }
+    }
+
+    for (int i = 0; i < list->size; i++) {
+        int next = list->next[i];
+        if ((next >= 0 && next <= list->size - 1 && list->data[i] != POISON && list->data[next] != POISON) && list->prev[next] != i && i != list->size - 1) {
+            printf("%d ", i);
+            error |= kWrongDirection;
+            return kWrongDirection;
+        }
+    }
 #ifdef _DEBUG
     if (list->data[0] != (List_t)canary_left || list->data[list->size - 1] != (List_t)canary_right) {
         error |= kErrorWrongCanary;
@@ -93,7 +109,7 @@ ListErrors ListVerify(List *list) {
 #endif
 
     for (int i = 0; i < list->size; i++) {
-        if (abs(list->next[i]) > list->size) {
+        if (abs(list->next[i]) > list->size || (list->data[list->next[i]] == POISON && list->data[i] != POISON)) {
             error |= kInvalidNext;
             fprintf(stderr, "%lu ", error);
             return (ListErrors)error;
@@ -233,7 +249,7 @@ ListErrors InsertElementBeforePosition(List *list, int pos, List_t value) {
         CHECK_ERROR_RETURN(ResizeList(list, realloc_type));
     }
 
-    if (pos < 1 || pos >= list->size) {
+    if (pos < 1 || pos >= list->size || list->data[pos] == POISON) {
         fprintf(stderr, "Pos = 1 is the first one, so pos < 1 is invalid.\n");
         return kInvalidPos;
     }

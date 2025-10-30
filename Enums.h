@@ -28,7 +28,10 @@ typedef enum {
 
     kInvalidNext      = 1 << 18,
     kInvalidPrev      = 1 << 19,
-    kFailure          = 1 << 20,
+
+    kInvalidUnusedPos = 1 << 20,
+    kWrongDirection   = 1 << 21,
+    kFailure          = 1 << 22,
     kSuccess           =      0,
 } ListErrors;
 
