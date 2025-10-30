@@ -10,9 +10,9 @@ typedef enum {
     kNullData         = 1 << 1,
     kNullNext         = 1 << 2,
     kNullPrev         = 1 << 3,
-    kNegativeHead     = 1 << 4,
-    kNegativeTail     = 1 << 5,
-    kNegativeFree     = 1 << 6,
+    kInvalidHead      = 1 << 4,
+    kInvalidTail      = 1 << 5,
+    kInvalidFree      = 1 << 6,
     kErrorWrongCanary = 1 << 7,
 
     kNoMemory         = 1 << 8,

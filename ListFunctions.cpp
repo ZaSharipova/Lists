@@ -49,33 +49,6 @@ ListErrors ListCtor(List *list) {
     return kSuccess;
 }
 
-static ListErrors DoCallocCtor(List *list) {
-    assert(list);
-
-    list->data = (List_t *) calloc ((size_t)list->size, sizeof(List_t));
-    if (list->data == NULL) {
-        ListDump(list, kNoMemory);
-        return kNoMemory;
-    }
-
-    list->next = (int *) calloc ((size_t)list->size, sizeof(int));
-    if (list->next == NULL) {
-        free(list->data);
-        ListDump(list, kNoMemory);
-        return kNoMemory;
-    }
-
-    list->prev = (int *) calloc ((size_t)list->size, sizeof(int));
-    if (list->next == NULL) {
-        free(list->data);
-        free(list->next);
-        ListDump(list, kNoMemory);
-        return kNoMemory;
-    }
-
-    return kSuccess;
-}
-
 ListErrors ListVerify(List *list) {
     assert(list);
 
@@ -101,20 +74,20 @@ ListErrors ListVerify(List *list) {
         return kNullPrev;
     }
 
-    if (list->next && list->next[0] < 0) {
-        error |= kNegativeHead;
+    if (list->next && (GetListHeadPos(list) < 0 || GetListHeadPos(list) >= list->size)) {
+        error |= kInvalidHead;
     }
 
-    if (list->prev && list->prev[0] < 0) {
-        error |= kNegativeTail;
+    if (list->prev && (GetListTailPos(list) < 0 || GetListTailPos(list) >= list->size)) {
+        error |= kInvalidTail;
     }
 
-    if (list->free < 0) {
-        error |= kNegativeFree;
+    if (list->free < 0 || list->free >= list->size) {
+        error |= kInvalidFree;
     }
 
 #ifdef _DEBUG
-    if (list->data[0] != canary_left || list->data[list->size - 1] != canary_right) {
+    if (list->data[0] != (List_t)canary_left || list->data[list->size - 1] != (List_t)canary_right) {
         error |= kErrorWrongCanary;
     }
 #endif
@@ -124,6 +97,18 @@ ListErrors ListVerify(List *list) {
     }
 
     return (ListErrors)error;
+}
+
+List_t GetListHeadPos(List *list) {
+    assert(list);
+
+    return list->next[0];
+}
+
+List_t GetListTailPos(List *list) {
+    assert(list);
+
+    return list->prev[0];
 }
 
 static Realloc_Mode CheckSize(List *list) {
@@ -163,40 +148,6 @@ static ListErrors ResizeList(List *list, Realloc_Mode realloc_type) {
 
     CHECK_ERROR_RETURN(ListVerify(list));
     return err;
-}
-
-static ListErrors DoRealloc(List *list) {
-    assert(list);
-
-    List_t *ptr_data = list->data;
-    List_t *realloc_data = (List_t *) realloc (ptr_data, (size_t)(list->size) * sizeof(*realloc_data));
-    if (realloc_data == NULL) {
-        ListDump(list, kNoMemory);
-        return kNoMemory;
-    }
-
-    int *ptr_int = list->next;
-    int *realloc_next = (int *) realloc (ptr_int, (size_t)(list->size) * sizeof(*realloc_next));
-    if (realloc_next == NULL) {
-        free(realloc_data);
-        ListDump(list, kNoMemory);
-        return kNoMemory;
-    }
-
-    ptr_int = list->prev;
-    int *realloc_prev = (int *) realloc (ptr_int, (size_t)(list->size) *sizeof(*realloc_prev));
-    if (realloc_prev == NULL) {
-        free(realloc_data);
-        free(realloc_prev);
-        ListDump(list, kNoMemory);
-        return kNoMemory;
-    }
-
-    list->data = realloc_data;
-    list->next = realloc_next;
-    list->prev = realloc_prev;
-
-    return kSuccess;
 }
 
 ListErrors InsertElementAfterPosition(List *list, int pos, List_t value) {
@@ -241,7 +192,7 @@ ListErrors InsertElementBeforePosition(List *list, int pos, List_t value) {
         CHECK_ERROR_RETURN(ResizeList(list, realloc_type));
     }
 
-    if (pos <= 1) {
+    if (pos < 1 || pos >= list->size) {
         fprintf(stderr, "Pos = 1 is the first one, so pos < 1 is invalid.\n");
         return kInvalidPos;
     }
@@ -261,7 +212,7 @@ ListErrors InsertElementBeforePosition(List *list, int pos, List_t value) {
     return kSuccess;
 }
 
-ListErrors DeleteElement(List *list, int pos, List_t value) { // value unused
+ListErrors DeleteElement(List *list, int pos, List_t value) { //value unused
     assert(list);
 
     ListErrors err = kSuccess;
@@ -272,7 +223,7 @@ ListErrors DeleteElement(List *list, int pos, List_t value) { // value unused
         CHECK_ERROR_RETURN(ResizeList(list, realloc_type));
     }
 
-    if (pos <= 0 || list->size == 0) {
+    if (pos <= 0 || list->size == 0 || pos >= list->size) {
         fprintf(stderr, "Pos <= 0 or size == 0, so DELETE is impossible.\n");
         return kInvalidPos;
     }
@@ -388,6 +339,67 @@ ListErrors ListDump(List *list, unsigned int error) {
 
 //     return kSuccess;
 // }
+
+static ListErrors DoCallocCtor(List *list) {
+    assert(list);
+
+    list->data = (List_t *) calloc ((size_t)list->size, sizeof(List_t));
+    if (list->data == NULL) {
+        ListDump(list, kNoMemory);
+        return kNoMemory;
+    }
+
+    list->next = (int *) calloc ((size_t)list->size, sizeof(int));
+    if (list->next == NULL) {
+        free(list->data);
+        ListDump(list, kNoMemory);
+        return kNoMemory;
+    }
+
+    list->prev = (int *) calloc ((size_t)list->size, sizeof(int));
+    if (list->next == NULL) {
+        free(list->data);
+        free(list->next);
+        ListDump(list, kNoMemory);
+        return kNoMemory;
+    }
+
+    return kSuccess;
+}
+
+static ListErrors DoRealloc(List *list) {
+    assert(list);
+
+    List_t *ptr_data = list->data;
+    List_t *realloc_data = (List_t *) realloc (ptr_data, (size_t)(list->size) * sizeof(*realloc_data));
+    if (realloc_data == NULL) {
+        ListDump(list, kNoMemory);
+        return kNoMemory;
+    }
+
+    int *ptr_int = list->next;
+    int *realloc_next = (int *) realloc (ptr_int, (size_t)(list->size) * sizeof(*realloc_next));
+    if (realloc_next == NULL) {
+        free(realloc_data);
+        ListDump(list, kNoMemory);
+        return kNoMemory;
+    }
+
+    ptr_int = list->prev;
+    int *realloc_prev = (int *) realloc (ptr_int, (size_t)(list->size) *sizeof(*realloc_prev));
+    if (realloc_prev == NULL) {
+        free(realloc_data);
+        free(realloc_prev);
+        ListDump(list, kNoMemory);
+        return kNoMemory;
+    }
+
+    list->data = realloc_data;
+    list->next = realloc_next;
+    list->prev = realloc_prev;
+
+    return kSuccess;
+}
 
 ListCommands FuncNameToEnum(const char *func_name) {
     assert(func_name);

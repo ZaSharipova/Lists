@@ -6,7 +6,7 @@
 #include <time.h>
 #include <assert.h>
 
-static const char *command_to_str(ListCommands type_of_command);
+static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info);
 static void PrintCurrentTime(FILE *file, const char *label);
 static void PrintListInfoItem(FILE *file, const char *label, int value);
 
@@ -20,32 +20,15 @@ void DoDump(ChangeOperationContext *Info) {
     assert(Info);
 
     fprintf(Info->file, "<h2> DUMP");
-    if (Info->type_of_command_before == kDump) {
-        fprintf(Info->file, " <font color = \"#8B4513\"> BEFORE </font> %s value", command_to_str(Info->type_of_command_after));
-        if (Info->type_of_command_after == kInsertAfter || Info->type_of_command_after == kInsertBefore) {
-            fprintf(Info->file, "<font color = #8B4513> " LIST_SPEC" </font> %s position <font color = #8B4513>%d </font></h3>\n", Info->number, 
-                (Info->type_of_command_after == kInsertAfter) ? "AFTER" : "BEFORE", Info->pos);
+    PrintChangeDescription(Info->file, Info);
 
-        } else if (Info->type_of_command_after == kDelete) {
-            fprintf(Info->file, " from position <font color = #8B4513>%d </font></h3>\n", Info->pos);
-        }
-
-    } else {
-        fprintf(Info->file, " <font color = \"#DAA520\">  AFTER </font> ");
-        if (Info->type_of_command_before == kInsertAfter || Info->type_of_command_before == kInsertBefore) {
-            fprintf(Info->file, "<font color = #7FFF00> %s </font> value <font color = #7FFF00> " LIST_SPEC" </font> %s position <font color = #7FFF00>%d </font></h3>\n", 
-            command_to_str(Info->type_of_command_before), Info->number, (Info->type_of_command_before == kInsertAfter) ? "AFTER" : "BEFORE", Info->pos);
-
-        } else if (Info->type_of_command_before == kDelete) {
-            fprintf(Info->file, "<font color = #FF0000> %s </font> value from position <font color = #FF0000>%d </font></h3>\n", command_to_str(Info->type_of_command_before), Info->pos);
-        }
-    }
     fprintf(Info->file, "<h4 style=\"margin: 3px 0;\">%s {%s} </h4>\n", Info->var_name, Info->filename);
 
     PrintCurrentTime(Info->file, "made");
 
     fprintf(Info->file, "<br>");
 
+    //list integers fill
     PrintListInfoItem(Info->file, "Capacity", Info->list->size);
     PrintListInfoItem(Info->file, "Size", Info->list->number_of_elem);
     PrintListInfoItem(Info->file, "Head", Info->list->next[0]);
@@ -68,13 +51,25 @@ void DoDump(ChangeOperationContext *Info) {
     fprintf(Info->file, "<br>");
 }
 
-static const char *command_to_str(ListCommands type_of_command) {
+static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info) {
+    assert(file && Info);
 
-    if (type_of_command == kInsertAfter || type_of_command == kInsertBefore) {
-        return "INSERT";
+    bool is_before = (Info->type_of_command_before == kDump);
+    int command_type = is_before ? Info->type_of_command_after : Info->type_of_command_before;
+    
+    const char *time_label = is_before ? "BEFORE" : "AFTER";
+    const char *color = is_before ? "#8B4513" : 
+                       (command_type == kDelete) ? "#FF0000" : "#7FFF00";
 
-    } else {
-        return "DELETE";
+    fprintf(file, " <font color=\"%s\"> %s </font> ", color, time_label);
+    
+    if (command_type == kInsertAfter || command_type == kInsertBefore) {
+        const char *position = (command_type == kInsertAfter) ? "AFTER" : "BEFORE";
+        fprintf(file, "<font color=\"%s\"> %s </font> value <font color=\"%s\"> " LIST_SPEC " </font> %s position <font color=\"%s\">%d</font></h3>\n",
+                color, "INSERT", color, Info->number, position, color, Info->pos);
+    } else if (command_type == kDelete) {
+        fprintf(file, "<font color=\"%s\"> %s </font> value from position <font color=\"%s\">%d</font></h3>\n",
+                color, "DELETE", color, Info->pos);
     }
 }
 
@@ -85,7 +80,7 @@ static void PrintCurrentTime(FILE *file, const char *label) {
     time_t now = time(NULL);
     struct tm *tm_now = localtime(&now);
 
-    char buf_time[64] = {};
+    char buf_time[MAX_STRING_SIZE] = {};
     strftime(buf_time, sizeof(buf_time), "%Y-%m-%d %H:%M:%S\n", tm_now);
 
     fprintf(file, "<h4 style=\"margin: 3px 0;\">%s: %s</h4>\n", label, buf_time);
@@ -141,8 +136,17 @@ static void PrintTableRowListSpec(FILE *file, const char *label, int size, List 
 
     fprintf(file, "<tr>");
     fprintf(file, "<td style=\"padding: 10px 24px; text-align: center; background-color: #fbf5eef2;\">%s</td>", label);
+
     for (int i = 0; i < size; i++) {
+#ifdef _DEBUG
+        if (i == 0 || i == list->size - 1) {
+            fprintf(file, "<td> " LIST_SPEC " (canary) </td>", list->data[i]);
+        } else {
+            fprintf(file, "<td> " LIST_SPEC " </td>", list->data[i]);
+        }
+#else
         fprintf(file, "<td> " LIST_SPEC " </td>", list->data[i]);
+#endif
     }
     fprintf(file, "</tr>\n");
 }
