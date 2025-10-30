@@ -27,6 +27,7 @@ typedef struct ChangeOperationContext {
     int pos;
     List_t number;
     int graph_counter;
+    ListErrors error;
 
     ListCommands type_of_command_before;
     ListCommands type_of_command_after;

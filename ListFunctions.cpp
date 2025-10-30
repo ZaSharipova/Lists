@@ -9,9 +9,10 @@
 #include "DoGraph.h"
 #include "Canary.h"
 #include "Subsidiary.h"
+#include "FileOperations.h"
+#include "SetLogFile.h"
 
 #define INCREASE_VALUE 4
-#define DECREASE_VALUE 4
 
 #define DEFAULT_POS -20
 #define DEFAULT_STROKE_SIZE 64
@@ -72,7 +73,7 @@ ListErrors ListVerify(List *list) {
         error |= kNullPrev;
         return kNullPrev;
     }
-
+    
     if (list->next && (GetListHeadPos(list) < 0 || GetListHeadPos(list) >= list->size)) {
         error |= kInvalidHead;
     }
@@ -91,9 +92,49 @@ ListErrors ListVerify(List *list) {
     }
 #endif
 
-    if (error != 0) {
-        ListDump(list, error);
+    for (int i = 0; i < list->size; i++) {
+        if (abs(list->next[i]) > list->size) {
+            error |= kInvalidNext;
+            fprintf(stderr, "%lu ", error);
+            return (ListErrors)error;
+        }
+
+        if (abs(list->prev[i]) > list->size) {
+            error |= kInvalidPrev;
+            return (ListErrors)error;
+        }
     }
+
+    int cnt = 0;
+    for (int i = list->free; list->next[i] != 0 && list->next[i] != list->size; i = list->next[i], ++cnt) {
+        if (cnt > list->size - list->number_of_elem) {
+            error |= kHasCycleFree;
+        }
+    }
+
+    cnt = 0;
+    for (int i = GetListHeadPos(list); list->next[i] != 0; i = list->next[i], ++cnt) {
+        if (cnt > list->number_of_elem) {
+            error |= kHasCycleNext;
+        }
+    }
+    if (cnt < list->number_of_elem - 1) {
+        error |= kHasSmallCycleNext;
+    }
+
+    cnt = 0;
+    for (int i = GetListTailPos(list); list->prev[i] != 0; i = list->prev[i], ++cnt) {
+        if (cnt > list->number_of_elem) {
+            error |= kHasCyclePrev;
+        }
+    }
+    if (cnt < list->number_of_elem - 1) {
+        error |= kHasSmallCyclePrev;
+    }
+
+    // if (error != 0) {
+    //     ListDump(list, error);
+    // }
 
     return (ListErrors)error;
 }
@@ -117,7 +158,7 @@ static Realloc_Mode CheckSize(List *list) {
         return kIncrease;
     }
 
-    if (list->size == 0) {
+    else if (list->size == 0) {
         return kIncreaseZero;
     }
 
@@ -131,6 +172,7 @@ static ListErrors ResizeList(List *list, Realloc_Mode realloc_type) {
     CHECK_ERROR_RETURN(ListVerify(list));
 
     int size_to_remember = list->size;
+
     if (realloc_type == kIncrease) {
         list->size += INCREASE_VALUE;
 
@@ -207,6 +249,7 @@ ListErrors InsertElementBeforePosition(List *list, int pos, List_t value) {
     list->prev[pos] = new_index;
 
     list->number_of_elem++;
+    list->next[2] = 1000;
     CHECK_ERROR_RETURN(ListVerify(list));
     return kSuccess;
 }
@@ -263,20 +306,28 @@ void FillList(List *list, int pos) {
         list->next[i] = i + 1;
         list->prev[i] = -1;
     }
-
+    list->next[list->size - 1] = 0;
 }
 
 ListErrors ListDump(List *list, unsigned int error) {
     assert(list);
 
     unsigned int bit = 1;
-    fprintf(stderr, "errors: ");
-    for (int i = 0; i < NUMBER_OF_ERRORS; i++) {
+    fprintf(GetLogFile(), "<h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
+    fprintf(GetLogFile(), "<h3> errors: ");
+    for (unsigned long long i = 0; i < NUMBER_OF_ERRORS; i++) {
         if (error & bit) {
-            fprintf(stderr, RED "%s" RESET, ListErrorString[i]);
+            fprintf(GetLogFile(), "%s ", ListErrorString[i]);
         }
         bit <<= 1;
     }
+
+    fprintf(GetLogFile(), "</h3>\n");
+
+    // ChangeOperationContext  Info = {GetLogFile(), list, "list", __FILE__, -1, -1, Info.graph_counter, kDump, kDump};
+    // DumpListToGraphviz(&Info);
+    // DoSnprintf(&Info);
+    // DoDump(&Info);
 
     printf("size: %d\n\n", list->size);
 

@@ -6,7 +6,8 @@
 #include "Structs.h"
 
 #define CHECK_ERROR_RETURN(cond) \
-    if (cond < 0) {              \
+    err = cond;                        \
+    if (err != kSuccess) {              \
         return err;              \
     }
 

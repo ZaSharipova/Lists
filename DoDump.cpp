@@ -21,13 +21,12 @@ static void PrintTableRowListSpec(FILE *file, const char *label, int size, List 
 void DoDump(ChangeOperationContext *Info) {
     assert(Info);
 
-    unsigned int error = 0;
     unsigned int bit = 1;
     if (Info->type_of_command_after == kDump && Info->type_of_command_before == kDump) {
         fprintf(Info->file, "<h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
         fprintf(Info->file, "<h3> errors: ");
         for (unsigned long long i = 0; i < NUMBER_OF_ERRORS; i++) {
-            if (error & bit) {
+            if (Info->error & bit) {
                 fprintf(Info->file, "%s ", ListErrorString[i]);
             }
             bit <<= 1;

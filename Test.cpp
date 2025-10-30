@@ -8,13 +8,19 @@
 
 #define DO_CHANGE(func, list, pos, value)                                                        \
     type_of_change = FuncNameToEnum(#func);                                                      \
-    Info = {file, list, #list, __FILE__, pos, value, Info.graph_counter, kDump, type_of_change}; \
+    Info = {file, list, #list, __FILE__, pos, value, Info.graph_counter, kSuccess, kDump, type_of_change}; \
     DoAllDump(&Info);                                                                            \
                                                                                                  \
-    CHECK_ERROR_RETURN(func(list, pos, value));                                                  \
+    Info.error = func(list, pos, value);                                                                \
+    if (Info.error != kSuccess) {       \
+        Info.type_of_command_after = kDump; \
+        DoAllDump(&Info);                                                                   \
+        return Info.error;                                                                              \
+    }                                                                                            \
                                                                                                  \
     Info.type_of_command_before = type_of_change, Info.type_of_command_after = kDump;            \
     DoAllDump(&Info);                                                                            \
+    Info.type_of_command_before = type_of_change, Info.type_of_command_after = type_of_change;  \
 
 ListErrors Test1(FILE *file, List *list) { //test all
     assert(file);
@@ -31,6 +37,7 @@ ListErrors Test1(FILE *file, List *list) { //test all
     DO_CHANGE(InsertElementAfterPosition, list, 3, 26);
     DO_CHANGE(DeleteElement, list, 2, 0);
     DO_CHANGE(InsertElementBeforePosition, list, 4, 10);
+    DO_CHANGE(InsertElementAfterPosition, list, 3, 26);
 
     return kSuccess;
 }

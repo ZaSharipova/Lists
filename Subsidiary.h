@@ -18,6 +18,8 @@ typedef struct {
 #define YELLOW "\033[33m"
 #define RESET "\033[0m"
 
+#define NUMBER_OF_ERRORS sizeof(ListErrorString)/sizeof(ListErrorString[0])
+
 static const char *ListErrorString[] = {
     "Negative Size",
     "Null Data Pointer",
@@ -32,6 +34,13 @@ static const char *ListErrorString[] = {
     "Error Opening File",
     "Error Closing File",
     "Invalid Position",
+    "Has Cycle in NEXT",
+    "Has Cycle in PREV",
+    "Has Cycle in FREE",
+    "Has small Cycle in NEXT",
+    "Has small Cycle in PREV",
+    "Invalid Next",
+    "Invalid Prev",
     "Failure",
 };
 
