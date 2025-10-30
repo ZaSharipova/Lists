@@ -10,6 +10,12 @@
 
 static void PrintGraphHeader(FILE *file);
 static FillAndBorderColor GetFillColors(ChangeOperationContext *Info, int pos);
+
+static void PrintNodes(ChangeOperationContext *Info, FILE *file);
+static void PrintInvisibleEdges(ChangeOperationContext *Info, FILE *file);
+static void PrintNextEdges(ChangeOperationContext *Info, FILE *file);
+static void PrintPrevEdges(ChangeOperationContext *Info, FILE *file);
+
 static void FillFree(ChangeOperationContext *Info, FILE *file);
 
 ListErrors DumpListToGraphviz(ChangeOperationContext *Info) {
@@ -21,60 +27,19 @@ ListErrors DumpListToGraphviz(ChangeOperationContext *Info) {
     }
 
     PrintGraphHeader(file);
-    //printf("%d ", Info->type_of_command_before);
+    PrintNodes(Info, file);
 
-    for (int i = 0; i < Info->list->size; i++) {
-        FillAndBorderColor colors = GetFillColors(Info, i);
-
-#ifdef _DEBUG
-        if (i == 0 || i == Info->list->size - 1) {
-            fprintf(file, "    node%d [label=\"idx: %d | data (canary): " LIST_SPEC" | next: %d | prev: %d\"; shape = Mrecord; style = filled; ", i, i, Info->list->data[i], Info->list->next[i], Info->list->prev[i]);
-        } else {
-            fprintf(file, "    node%d [label=\"idx: %d | data: " LIST_SPEC" | next: %d | prev: %d\"; shape = Mrecord; style = filled; ", i, i, Info->list->data[i], Info->list->next[i], Info->list->prev[i]);
-        }
-#else
-        fprintf(file, "    node%d [label=\"idx: %d | data: " LIST_SPEC" | next: %d | prev: %d\"; shape = Mrecord; style = filled; ", i, i, Info->list->data[i], Info->list->next[i], Info->list->prev[i]);
-#endif
-        fprintf(file, "fillcolor = \"%s\"; color = \"%s\"];\n", colors.fillColor, colors.borderColor);
-
-    }
-    fprintf(file, "\n");
-
-    fprintf(file, "    node0 -> node1");
-    for (int i = 2; i < Info->list->size; i++) {
-        fprintf(file, " -> node%d", i);
-    }
-    fprintf(file, " [style=invis, weight=1000];\n\n");
-
-    for (int i = 0; i < Info->list->size; i++) {
-        if ((i != Info->list->size - 1)) {
-            fprintf(file, "    node%d -> node%d [color=purple2];\n", i, Info->list->next[i]);
-        }
-    }
-
-    fprintf(file, "\n");
-
-    for (int i = 0; i < Info->list->size; i++) {
-        if ((Info->list->data[i] != POISON || i == 0) && Info->list->prev[i] != -1) {
-
-#ifdef _DEBUG
-            if (Info->list->data[i] != canary_right && Info->list->data[i] != canary_left || i == 0) {
-            fprintf(file, "    node%d -> node%d [color=mediumaquamarine, constraint=false];\n", 
-                    i, Info->list->prev[i]);
-            }
-#else 
-            fprintf(file, "    node%d -> node%d [color=mediumaquamarine, constraint=false];\n", 
-                    i, Info->list->prev[i]);
-#endif
-        }
-    }
-
-    fprintf(file, "\n");
+    PrintInvisibleEdges(Info, file);
+    PrintNextEdges(Info, file);
+    PrintPrevEdges(Info, file);
 
     FillFree(Info, file);
+
     printf("Graphviz dump saved to %s\n", FILE_FOR_GRAPH_TEXT);
+
     return CloseFile(file);
 }
+
 
 static void PrintGraphHeader(FILE *file) {
     assert(file);
@@ -88,6 +53,8 @@ static void PrintGraphHeader(FILE *file) {
 }
 
 static FillAndBorderColor GetFillColors(ChangeOperationContext *Info, int pos) {
+    assert(Info);
+
     if (pos == 0) {
         return (FillAndBorderColor){"#20B2AA", "#008B8B"};
 
@@ -96,7 +63,7 @@ static FillAndBorderColor GetFillColors(ChangeOperationContext *Info, int pos) {
 
     } else if (Info->list->data[pos] == POISON
 #ifdef _DEBUG
-           || Info->list->data[pos] == canary_right
+           || Info->list->data[pos] == (List_t)canary_right
 #endif
     ) {
         return (FillAndBorderColor){"#fbf5eef2", "#CD853F"};
@@ -110,7 +77,74 @@ static FillAndBorderColor GetFillColors(ChangeOperationContext *Info, int pos) {
     }
 }
 
+static void PrintNodes(ChangeOperationContext *Info, FILE *file) {
+    assert(Info);
+    assert(file);
+
+    for (int i = 0; i < Info->list->size; i++) {
+        FillAndBorderColor colors = GetFillColors(Info, i);
+
+#ifdef _DEBUG
+        const char *data_label = (i == 0 || i == Info->list->size - 1) ? "data (canary)" : "data";
+#else
+        const char *data_label = "data";
+#endif
+        fprintf(file, "    node%d [label=\"idx: %d | %s: " LIST_SPEC " | next: %d | prev: %d\"; shape=Mrecord; style=filled; ",
+                i, i, data_label, Info->list->data[i], Info->list->next[i], Info->list->prev[i]);
+
+        fprintf(file, "fillcolor = \"%s\"; color = \"%s\"];\n", colors.fillColor, colors.borderColor);
+    }
+}
+
+static void PrintInvisibleEdges(ChangeOperationContext *Info, FILE *file) {
+    assert(Info);
+    assert(file);
+
+    fprintf(file, "    node0 -> node1");
+    for (int i = 2; i < Info->list->size; i++) {
+        fprintf(file, " -> node%d", i);
+    }
+    fprintf(file, " [style=invis, weight=1000];\n\n");
+}
+
+static void PrintNextEdges(ChangeOperationContext *Info, FILE *file) {
+    assert(Info);
+    assert(file);
+
+    for (int i = 0; i < Info->list->size; i++) {
+        const char *color = NULL;
+        if (Info->list->data[i] == POISON && (i != Info->list->size - 1 && i != 0)) {
+            color = "hotpink";
+        } else if ((i != Info->list->size - 1)) {
+            color = "purple2";
+        }
+        if (color != NULL) {
+            fprintf(file, "    node%d -> node%d [color=%s];\n", i, Info->list->next[i], color);
+        }
+    }
+}
+
+static void PrintPrevEdges(ChangeOperationContext *Info, FILE *file) {
+    assert(Info);
+    assert(file);
+
+    for (int i = 0; i < Info->list->size; i++) {
+        if ((Info->list->data[i] != POISON || i == 0) && Info->list->prev[i] != -1) {
+#ifdef _DEBUG
+            if ((Info->list->data[i] != (List_t)canary_right && Info->list->data[i] != (List_t)canary_left) || i == 0) {
+                fprintf(file, "    node%d -> node%d [color=mediumaquamarine, constraint=false];\n", i, Info->list->prev[i]);
+            }
+#else
+            fprintf(file, "    node%d -> node%d [color=mediumaquamarine, constraint=false];\n", i, Info->list->prev[i]);
+#endif
+        }
+    }
+}
+
 static void FillFree(ChangeOperationContext *Info, FILE *file) {
+    assert(Info);
+    assert(file);
+
     fprintf(file, "    free [shape=ellipse fillcolor=\"#DCDCDC\" style=filled label=\"free = %d\"];\n", Info->list->free);
     fprintf(file, "    {rank=same; free; node%d; }", Info->list->free);
     fprintf(file, "    free -> node%d [color=\"#8B4513\"];\n", Info->list->free);

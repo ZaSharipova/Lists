@@ -16,7 +16,7 @@ int main(void) {
     List list = {};
     CHECK_ERROR_RETURN(ListCtor(&list));
 
-    CHECK_ERROR_RETURN(Test1(file, &list));
+    CHECK_ERROR_RETURN(Test2(file, &list));
 
     ListDtor(&list);
     return CloseFile(file);

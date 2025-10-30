@@ -14,6 +14,8 @@ typedef struct {
 } FillAndBorderColor;
 
 #define RED "\033[31m"
+#define PUPRPUR "\033[35m"
+#define YELLOW "\033[33m"
 #define RESET "\033[0m"
 
 static const char *ListErrorString[] = {

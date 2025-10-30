@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "Structs.h"
-#include "Colors.h"
 #include "DoDump.h"
 #include "DoGraph.h"
 #include "Canary.h"
