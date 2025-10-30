@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "Structs.h"
+#include "Subsidiary.h"
 
 #include <time.h>
 #include <assert.h>
@@ -20,7 +21,21 @@ static void PrintTableRowListSpec(FILE *file, const char *label, int size, List 
 void DoDump(ChangeOperationContext *Info) {
     assert(Info);
 
-    fprintf(Info->file, "<h2> DUMP");
+    unsigned int error = 0;
+    unsigned int bit = 1;
+    if (Info->type_of_command_after == kDump && Info->type_of_command_before == kDump) {
+        fprintf(Info->file, "<h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
+        fprintf(Info->file, "<h3> errors: ");
+        for (unsigned long long i = 0; i < NUMBER_OF_ERRORS; i++) {
+            if (error & bit) {
+                fprintf(Info->file, "%s ", ListErrorString[i]);
+            }
+            bit <<= 1;
+        }
+    } else {
+        fprintf(Info->file, "<h2> DUMP\n");
+    }
+
     PrintChangeDescription(Info->file, Info);
 
     fprintf(Info->file, "<h4 style=\"margin: 3px 0;\">%s {%s} </h4>\n", Info->var_name, Info->filename);
@@ -58,6 +73,10 @@ static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info) {
     bool is_before = (Info->type_of_command_before == kDump);
     int command_type = is_before ? Info->type_of_command_after : Info->type_of_command_before;
     
+    if (Info->type_of_command_before == kDump && Info->type_of_command_after == kDump) {
+        //fprintf(file, "<h3> Error Listing </h3>");
+        return;
+    }
     const char *time_label = is_before ? "BEFORE" : "AFTER";
     const char *color = is_before ? "#8B4513" : 
                        (command_type == kDelete) ? "#FF0000" : "#7FFF00";

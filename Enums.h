@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-#define NUMBER_OF_ERRORS 15
-
 typedef enum {
     kNegativeSize     = 1 << 0,
     kNullData         = 1 << 1,
@@ -20,8 +18,18 @@ typedef enum {
     kErrorOpening     = 1 << 10,
     kErrorClosing     = 1 << 11,
     kInvalidPos       = 1 << 12,
-    kFailure          = 1 << 13,
-    kSuccess          =      0,
+
+    kHasCycleNext     = 1 << 13,
+    kHasCyclePrev     = 1 << 14,
+    kHasCycleFree     = 1 << 15,
+
+    kHasSmallCycleNext = 1 << 16,
+    kHasSmallCyclePrev = 1 << 17,
+
+    kInvalidNext      = 1 << 18,
+    kInvalidPrev      = 1 << 19,
+    kFailure          = 1 << 20,
+    kSuccess           =      0,
 } ListErrors;
 
 typedef enum {
