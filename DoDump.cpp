@@ -5,6 +5,7 @@
 
 #include <time.h>
 #include <assert.h>
+#include <math.h>
 
 static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info);
 static void PrintCurrentTime(FILE *file, const char *label);
@@ -140,7 +141,7 @@ static void PrintTableRowListSpec(FILE *file, const char *label, int size, List 
     for (int i = 0; i < size; i++) {
 #ifdef _DEBUG
         if (i == 0 || i == list->size - 1) {
-            fprintf(file, "<td> " LIST_SPEC " (canary) </td>", list->data[i]);
+            fprintf(file, "<td> " LIST_SPEC " (canary) </td>", abs(list->data[i]));
         } else {
             fprintf(file, "<td> " LIST_SPEC " </td>", list->data[i]);
         }

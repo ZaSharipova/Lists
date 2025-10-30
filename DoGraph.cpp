@@ -90,7 +90,7 @@ static void PrintNodes(ChangeOperationContext *Info, FILE *file) {
         const char *data_label = "data";
 #endif
         fprintf(file, "    node%d [label=\"idx: %d | %s: " LIST_SPEC " | next: %d | prev: %d\"; shape=Mrecord; style=filled; ",
-                i, i, data_label, Info->list->data[i], Info->list->next[i], Info->list->prev[i]);
+                i, i, data_label, abs(Info->list->data[i]), Info->list->next[i], Info->list->prev[i]);
 
         fprintf(file, "fillcolor = \"%s\"; color = \"%s\"];\n", colors.fillColor, colors.borderColor);
     }

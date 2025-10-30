@@ -111,7 +111,7 @@ ListErrors Test6(FILE *file, List *list) { //test insert after tail
     ChangeOperationContext Info = {};
 
     DO_CHANGE(InsertElementAfterPosition, list, 0, 32);
-    DO_CHANGE(InsertElementAfterPosition, list, 0, 20);
+    DO_CHANGE(InsertElementBeforePosition, list, 1, 20);
     DO_CHANGE(InsertElementAfterPosition, list, 1, 25);
     DO_CHANGE(InsertElementAfterPosition, list, 3, 25);
 
