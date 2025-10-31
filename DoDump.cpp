@@ -44,20 +44,24 @@ void DoDump(ChangeOperationContext *Info) {
     fprintf(Info->file, "<br>");
 
     //list integers fill
+    if (Info->list->data && Info->list->next && Info->list->prev) {
     PrintListInfoItem(Info->file, "Capacity", Info->list->size);
     PrintListInfoItem(Info->file, "Size", Info->list->number_of_elem);
     PrintListInfoItem(Info->file, "Head", Info->list->next[0]);
     PrintListInfoItem(Info->file, "Tail", Info->list->prev[0]);
     PrintListInfoItem(Info->file, "Free", Info->list->free);
+    }
 
     fprintf(Info->file, "<br>");
 
+    if (Info->list->data && Info->list->next && Info->list->prev) {
     PrintTableStart(Info->file);
     PrintTableHeader(Info->file, Info->list->size);
     PrintTableRowListSpec(Info->file, "Data", Info->list->size, Info->list);
     PrintTableRowData(Info->file, "Next", Info->list->size, Info->list->next);
     PrintTableRowData(Info->file, "Prev", Info->list->size, Info->list->prev);
     PrintTableEnd(Info->file);
+    }
 
     fprintf(Info->file, "<br><br>\n");
 

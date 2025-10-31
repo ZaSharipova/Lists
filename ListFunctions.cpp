@@ -109,17 +109,29 @@ ListErrors ListVerify(List *list) {
 #endif
 
     for (int i = 0; i < list->size; i++) {
-        if (abs(list->next[i]) > list->size || (list->data[list->next[i]] == POISON && list->data[i] != POISON)) {
-            error |= kInvalidNext;
-            fprintf(stderr, "%lu ", error);
-            return (ListErrors)error;
-        }
+    int next = list->next[i];
+    int prev = list->prev[i];
 
-        if (abs(list->prev[i]) > list->size) {
-            error |= kInvalidPrev;
-            return (ListErrors)error;
-        }
+    if (!(next == -1 || (next >= 0 && next < list->size))) {
+        error |= kInvalidNext;
+        fprintf(stderr, "Invalid next: idx=%d next=%d\n", i, next);
+        return (ListErrors)error;
     }
+
+    if (!(prev == -1 || (prev >= 0 && prev < list->size))) {
+        error |= kInvalidPrev;
+        fprintf(stderr, "Invalid prev: idx=%d prev=%d\n", i, prev);
+        return (ListErrors)error;
+    }
+
+    // Если next указывает на валидную ячейку, и данных нет (например, POISON), но сама i-я ячейка не POISON
+    // if (next != -1 && list->data[next] == POISON && list->data[i] != POISON && list->number_of_elem != 1 && (i == 0 || list->next[i] == 0)) {
+    //     error |= kInvalidNext;
+    //     fprintf(stderr, "Next points to POISON: idx=%d, next=%d\n", i, next);
+    //     return (ListErrors)error;
+    // }
+}
+
 
     int cnt = 0;
     for (int i = list->free; list->next[i] != 0 && list->next[i] != list->size; i = list->next[i], ++cnt) {
@@ -265,7 +277,7 @@ ListErrors InsertElementBeforePosition(List *list, int pos, List_t value) {
     list->prev[pos] = new_index;
 
     list->number_of_elem++;
-    list->next[2] = 1000;
+    list->data = NULL;
     CHECK_ERROR_RETURN(ListVerify(list));
     return kSuccess;
 }
