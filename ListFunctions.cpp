@@ -87,7 +87,7 @@ ListErrors ListVerify(List *list) {
     }
 
     for (int i = 0; i < list->size; i++) {
-        if (list->data[i] == POISON && list->prev[i] != -1 && i != list->size - 1) {
+        if (list->data[i] == POISON && list->prev[i] != -1 && i != list->size - 1 && i != 0) {
             printf("sdfgh");
             error |= kInvalidUnusedPos;
             return (ListErrors)error;

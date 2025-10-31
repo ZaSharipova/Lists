@@ -82,8 +82,6 @@ ListErrors DumpListToGraphviz(ChangeOperationContext *Info) {
 //     }
 // }
 
-#include <stdlib.h>
-
 static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
     assert(Info);
     assert(file);
@@ -160,56 +158,6 @@ static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
     free(bad_next);
     free(bad_prev);
 }
-
-// static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
-//     assert(Info);
-//     assert(file);
-
-//     for (int i = 0; i < Info->list->size; i++) {
-//         int next = Info->list->next[i];
-//         int prev = Info->list->prev[i];
-
-//         bool next_valid = (next >= 0 && next < Info->list->size && 
-//             ((Info->list->data[next] == POISON && Info->list->data[i] == POISON) || (Info->list->data[next] != POISON && Info->list->data[i] != POISON)));
-//         bool prev_valid = (prev >= 0 && prev < Info->list->size && 
-//             ((Info->list->data[prev] == POISON && Info->list->data[i] == POISON) || (Info->list->data[prev] != POISON && Info->list->data[i] != POISON)));
-
-//         if (prev == 1000) {
-//             printf("%d %d", next_valid, prev_valid);
-//         }
-//         if (next_valid && Info->list->prev[next] == i) {
-//             fprintf(file, "    node%d -> node%d [color=\"purple2\", dir=both];\n", i, next);
-
-//         }else if (Info->list->data[i] == POISON && i != 0) {
-//             if (prev_valid) {
-//                 fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", prev);
-//                 fprintf(file, "    node%d -> node%d [color=\"firebrick\", penwidth=\"3\"];\n", prev, i);
-//             } else if (next_valid || next == Info->list->size - 1) {
-//                 fprintf(file, "    node%d -> node%d [color=\"pink\"];\n", i, next);
-//             } else {
-//                 fprintf(file, "    node%d [shape=octagon, fillcolor=\"pink\", style=filled];\n", i);
-//             }
-
-        
-//         }
-//         // Ошибка в индексе prev или next
-//         else if ((!next_valid && next != -1) || (!prev_valid && prev != -1)) {
-//             // Явно окрашиваем некорректный узел и не рисуем связей к несуществующему индексу
-//             if (!next_valid && next != -1) {
-//                 fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", next);
-//                 fprintf(file, "    node%d -> node%d [color=\"firebrick\", penwidth=\"3\"];\n", i, next);
-//             } else {
-//                 fprintf(file, "    node%d [label=\"invalid prev %d\", shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", prev, prev);
-//                 fprintf(file, "    node%d -> node%d [color=\"firebrick\", penwidth=\"3\"];\n", i, prev);
-//             }
-//         }
-//         // Нормальная односторонняя/ошибочная связь
-//         else if (next_valid && i != Info->list->size - 1) {
-//             fprintf(file, "    node%d -> node%d [color=\"purple2\"];\n", i, next);
-//         }
-//     }
-// }
-
 
 
 static void PrintGraphHeader(FILE *file) {
