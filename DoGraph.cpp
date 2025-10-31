@@ -13,10 +13,13 @@ static FillAndBorderColor GetFillColors(ChangeOperationContext *Info, int pos);
 
 static void PrintNodes(ChangeOperationContext *Info, FILE *file);
 static void PrintInvisibleEdges(ChangeOperationContext *Info, FILE *file);
-static void PrintNextEdges(ChangeOperationContext *Info, FILE *file);
-static void PrintPrevEdges(ChangeOperationContext *Info, FILE *file);
 
 static void FillFree(ChangeOperationContext *Info, FILE *file);
+
+static void PrintOrangeRelatedEdges(ChangeOperationContext *Info, FILE *file, int i, int next, int size);
+static void PrintSpecialEdges(ChangeOperationContext *Info, FILE *file, int i, int next, int size);
+
+
 static void PrintEdges(ChangeOperationContext *Info, FILE *file);
 
 ListErrors DumpListToGraphviz(ChangeOperationContext *Info) {
@@ -28,16 +31,13 @@ ListErrors DumpListToGraphviz(ChangeOperationContext *Info) {
     }
 
     if (Info->list->data && Info->list->next && Info->list->prev) {
-    PrintGraphHeader(file);
-    PrintNodes(Info, file);
+        PrintGraphHeader(file);
+        PrintNodes(Info, file);
 
-    PrintInvisibleEdges(Info, file);
+        PrintInvisibleEdges(Info, file);
 
-    PrintEdges(Info, file);
-
-    // PrintNextEdges(Info, file);
-    // PrintPrevEdges(Info, file);
-    FillFree(Info, file);
+        PrintEdges(Info, file);
+        FillFree(Info, file);
     }
 
     printf("Graphviz dump saved to %s\n", FILE_FOR_GRAPH_TEXT);
@@ -45,47 +45,37 @@ ListErrors DumpListToGraphviz(ChangeOperationContext *Info) {
     return CloseFile(file);
 }
 
-// static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
-//     assert(Info);
-//     assert(file);
+static void PrintOrangeRelatedEdges(ChangeOperationContext *Info, FILE *file, int i, int next, int size) {
+    assert(Info);
+    assert(file);
 
-//     for (int i = 0; i < Info->list->size; i++) {
-//         int next = Info->list->next[i];
-//         int prev = Info->list->prev[i];
+    fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", i, next);
+    
+    if (Info->list->prev[next] >= 0 && Info->list->prev[next] < size) {
+        fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", next, Info->list->prev[next]);
+    } else {
+        fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", Info->list->prev[next]);
+    }
+}
 
-//         if (Info->list->data[i] == POISON && i != 0) {
-//             if (next >= 0 && next < Info->list->size) {
-//                 fprintf(file, "    node%d -> node%d [color=\"pink\"];\n", i, next);
-//             }
-//         }
+static void PrintSpecialEdges(ChangeOperationContext *Info, FILE *file, int i, int next, int size) {
+    assert(Info);
+    assert(file);
 
-//         if (next < Info->list->size && next >= 0) {
-//             if (Info->list->prev[next] == i && Info->list->next[next] < Info->list->size && i < next) {
-//                 fprintf(file, "    node%d -> node%d [color=\"purple2\", dir=both];\n", i, next);
-//             } else if (Info->list->prev[next] == i && Info->list->next[next] < Info->list->size) {
-//                 continue;
-//             } else if (i < Info->list->size - 1 && prev != -1 && Info->list->next[next] >= Info->list->size) {
-//                 fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"2\"];\n", i, next);
-//             }
-//         }
+    if (Info->list->data[i] == POISON && i != 0) {
+        if (next > 0 && next < size) {
+            fprintf(file, "    node%d -> node%d [color=\"pink\"];\n", i, next);
+        }
+    } else {
+        fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", i, next);
+        if (next >= 0 && next < size && !(Info->list->prev[next] >= 0 && Info->list->prev[next] < size)) {
+            fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", Info->list->prev[next]);
+        }
+        fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", next);
+    }
+}
 
-//         if (prev != -1 && prev < Info->list->size && next <= Info->list->size) {
-//             if (!(Info->list->next[prev] == i && prev < i && next <= Info->list->size)) {
-//                 fprintf(file, "    node%d -> node%d [color=\"purple2\", dir=both];\n", i, prev);
-//             } else if (Info->list->prev[next] == i) {
-//                 continue;
-//             }
-//         }
-
-//         if (((next == -1 || next >= Info->list->size) || (prev == -1 || prev >= Info->list->size)) && next != 0 && prev != -1) {
-//             fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", (prev >=Info->list->size) ? prev : next);
-//             fprintf(file, "    node%d -> node%d [color=\"firebrick\", penwidth=\"3\"];\n", i, (prev >=Info->list->size) ? prev : next);
-//         }
-//     }
-// }
-
-static void PrintEdges(ChangeOperationContext *Info, FILE *file)
-{
+static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
     assert(Info);
     assert(file);
 
@@ -93,49 +83,66 @@ static void PrintEdges(ChangeOperationContext *Info, FILE *file)
 
     for (int i = 0; i < size; i++) {
         int next = Info->list->next[i];
-        int prev = Info->list->prev[i];
-
-        if (Info->list->data[i] == POISON && i != 0) {
-            if (next > 0 && next < size) {
-                fprintf(file, "    node%d -> node%d [color=\"pink\"];\n", i, next);
-            }
-            continue;
-        }
-
+        
         if (next >= 0 && next < size) {
-            if (Info->list->prev[next] == i) {
-                if (Info->list->number_of_elem == 1 && i < next) {
+            if (Info->list->data[i] == POISON && i != 0) {
+                PrintSpecialEdges(Info, file, i, next, size);
+            } else if (Info->list->prev[next] == i && Info->list->next[next] >= 0 && Info->list->next[next] < size) {
+                if (next < i && Info->list->number_of_elem == 1) {
                     continue;
                 }
                 fprintf(file, "    node%d -> node%d [color=\"purple2\", dir=both];\n", i, next);
-            } else if (Info->list->number_of_elem != 1 && Info->list->prev[next] != i) {
-                fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", i, next);
+
+            } else if (!(Info->list->next[next] >= 0 && Info->list->next[next] < size) || i != size - 1) {
+                PrintOrangeRelatedEdges(Info, file, i, next, size);
             }
-        }
 
-        else if (next != -1) {
-            fprintf(file,
-                "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n"
-                "    node%d -> node%d [color=\"firebrick\", penwidth=\"3\"];\n",
-                (next >= size) ? next : i, i, (next >= size) ? next : i);
-        }
-
-        if (prev >= 0 && prev < size) {
-            if (Info->list->next[prev] != i) {
-                fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", prev, i);
-            }
-        } else if (prev != -1) {
-            fprintf(file,
-                "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n"
-                "    node%d -> node%d [color=\"firebrick\", penwidth=\"3\"];\n",
-                (prev >= size) ? prev : i, (prev >= size) ? prev : i, i);
-        }
-
-        if ((next == -1 || next >= size) && (prev == -1 || prev >= size)) {
-            fprintf(file, "    node%d [shape=octagon, fillcolor=\"red\", style=filled];\n", i);
+        } else {
+            PrintSpecialEdges(Info, file, i, next, size);
         }
     }
 }
+
+// static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
+//     assert(Info);
+//     assert(file);
+
+//     int size = Info->list->size;
+
+//     for (int i = 0; i < size; i++) {
+//         int next = Info->list->next[i];
+//         int prev = Info->list->prev[i];
+
+//         if (Info->list->data[i] == POISON && i != 0) {
+//             if (next > 0 && next < size) {
+//                 fprintf(file, "    node%d -> node%d [color=\"pink\"];\n", i, next);
+//             }
+//             continue;
+//         }
+
+//         else if (next != -1) {
+//             fprintf(file,
+//                 "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n"
+//                 "    node%d -> node%d [color=\"firebrick\", penwidth=\"3\"];\n",
+//                 (next >= size) ? next : i, i, (next >= size) ? next : i);
+//         }
+
+//         if (prev >= 0 && prev < size) {
+//             if (Info->list->next[prev] != i) {
+//                 fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", prev, i);
+//             }
+//         } else if (prev != -1) {
+//             fprintf(file,
+//                 "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n"
+//                 "    node%d -> node%d [color=\"firebrick\", penwidth=\"3\"];\n",
+//                 (prev >= size) ? prev : i, (prev >= size) ? prev : i, i);
+//         }
+
+//         if ((next == -1 || next >= size) && (prev == -1 || prev >= size)) {
+//             fprintf(file, "    node%d [shape=octagon, fillcolor=\"red\", style=filled];\n", i);
+//         }
+//     }
+// }
 
 static void PrintGraphHeader(FILE *file) {
     assert(file);
@@ -187,7 +194,7 @@ static void PrintNodes(ChangeOperationContext *Info, FILE *file) {
         const char *data_label = "data";
 #endif
         fprintf(file, "    node%d [label=\"idx: %d | %s: " LIST_SPEC " | next: %d | prev: %d\"; shape=Mrecord; style=filled; ",
-                i, i, data_label, abs(Info->list->data[i]), Info->list->next[i], Info->list->prev[i]);
+                i, i, data_label, Info->list->data[i], Info->list->next[i], Info->list->prev[i]);
 
         fprintf(file, "fillcolor = \"%s\"; color = \"%s\"];\n", colors.fillColor, colors.borderColor);
     }

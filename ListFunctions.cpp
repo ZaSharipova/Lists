@@ -202,7 +202,10 @@ static ListErrors ResizeList(List *list, Realloc_Mode realloc_type) {
     int size_to_remember = list->size;
 
     if (realloc_type == kIncrease) {
-        list->size += INCREASE_VALUE;
+        list->size *= INCREASE_VALUE;
+
+    } else if (realloc_type == kDecrease) {
+        list->size /= INCREASE_VALUE;
 
     } else if (realloc_type == kIncreaseZero) {
         list->size = 1;
@@ -247,6 +250,8 @@ ListErrors InsertElementAfterPosition(List *list, int pos, List_t value) {
 
     list->number_of_elem++;
     CHECK_ERROR_RETURN(ListVerify(list));
+    //if (list->next[0] != 0) CHECK_ERROR_RETURN(DoLinerization(list));
+
     return kSuccess;
 }
 
@@ -277,8 +282,8 @@ ListErrors InsertElementBeforePosition(List *list, int pos, List_t value) {
     list->prev[pos] = new_index;
 
     list->number_of_elem++;
-    list->data = NULL;
     CHECK_ERROR_RETURN(ListVerify(list));
+    //if (list->next[0] != 0) CHECK_ERROR_RETURN(DoLinerization(list));
     return kSuccess;
 }
 
@@ -309,6 +314,7 @@ ListErrors DeleteElement(List *list, int pos, List_t value) { //value unused
     list->number_of_elem--;
 
     CHECK_ERROR_RETURN(ListVerify(list));
+    //if (list->next[0] != 0) CHECK_ERROR_RETURN(DoLinerization(list));
     return kSuccess;
 }
 
@@ -435,7 +441,7 @@ static ListErrors DoCallocCtor(List *list) {
     }
 
     list->prev = (int *) calloc ((size_t)list->size, sizeof(int));
-    if (list->next == NULL) {
+    if (list->prev == NULL) {
         free(list->data);
         free(list->next);
         ListDump(list, kNoMemory);
@@ -515,25 +521,79 @@ static void DoSnprintf(ChangeOperationContext *Info) {
     system(cmd);
 }
 
-// ListErrors ListDumpBefore(ChangeOperationContext *Info, int *graph_counter, int pos, ListCommands type_of_change) {
-//     DumpListToGraphviz(Info);
-//     DoSnprintf(Info, graph_counter);
+ListErrors DoLinerization(List *list) {
+    assert(list);
 
-//     Info->pos = pos, Info->type_of_command_before = kDump, Info->type_of_command_after = type_of_change;
-//     DoDump(Info);
-// }
+    ListErrors err = kSuccess;
+    CHECK_ERROR_RETURN(ListVerify(list));
 
-// ListErrors ListDumpAfter(ChangeOperationContext *Info, int *graph_counter, int pos, ListCommands type_of_change) {
-//     assert(Info);
-//     assert(graph_counter);
+    List_t *data = (List_t *) calloc((size_t)list->size, sizeof(List_t));
+    if (data == NULL) {
+        return kNoMemory;
+    }
 
-//     ListErrors err = kSuccess;
+    int *next = (int *) calloc((size_t)list->size, sizeof(int));
+    if (next == NULL) {
+        free(data);
+        return kNoMemory;
+    }
 
-//     Info->type_of_command_before = type_of_change, Info->type_of_command_after = kDump;   
-//     CHECK_ERROR_RETURN(DumpListToGraphviz(Info));
-//     DoSnprintf(Info, graph_counter);
+    int *prev = (int *) calloc((size_t)list->size, sizeof(int));
+    if (prev == NULL) {
+        free(data);
+        free(next);
+        return kNoMemory;
+    }
 
-//     DoDump(Info);
+    for (int i = 0; i < list->size; i++) {
+        data[i] = POISON;
+        next[i] = 0;
+        prev[i] = -1;
+    }
 
-//     return kSuccess;
-// }
+    prev[0] = 0;
+    next[0] = 0;
+
+    int cnt = 1;
+    int curr = GetListHeadPos(list);
+
+    while (curr != 0 && curr < list->size && curr > 0) {
+        data[cnt] = list->data[curr];
+        next[cnt] = cnt + 1;
+        prev[cnt] = cnt - 1;
+        curr = list->next[curr];
+        cnt++;
+    }
+
+    if (cnt > 1) {
+        next[cnt - 1] = 0;
+        prev[1] = 0;
+        next[0] = 1;
+        prev[0] = cnt - 1;
+    } else {
+        next[0] = 0;
+        prev[0] = 0;
+    }
+
+    if (cnt < list->size) {
+        list->free = cnt;
+        for (int i = cnt; i < list->size; i++) {
+            data[i] = POISON;
+            prev[i] = -1;
+            next[i] = (i + 1 < list->size) ? i + 1 : 0;
+        }
+    } else {
+        list->free = 0;
+    }
+
+    free(list->data);
+    free(list->next);
+    free(list->prev);
+
+    list->data = data;
+    list->next = next;
+    list->prev = prev;
+
+    CHECK_ERROR_RETURN(ListVerify(list));
+    return kSuccess;
+}
