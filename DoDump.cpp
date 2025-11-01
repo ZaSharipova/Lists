@@ -24,13 +24,14 @@ void DoDump(ChangeOperationContext *Info) {
     unsigned int bit = 1;
     if (Info->type_of_command_after == kDump && Info->type_of_command_before == kDump) {
         fprintf(Info->file, "<h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
-        fprintf(Info->file, "<h3> errors: ");
+        fprintf(Info->file, "<h3> errors: </h3>");
         for (unsigned long long i = 0; i < NUMBER_OF_ERRORS; i++) {
             if (Info->error & bit) {
-                fprintf(Info->file, "%s ", ListErrorString[i]);
+                fprintf(Info->file, "<h4> <font color=\"red\"> %s </font> </h4> \n", ListErrorString[i]);
             }
             bit <<= 1;
         }
+        fprintf(Info->file, "<br>");
     } else {
         fprintf(Info->file, "<h2> DUMP\n");
     }

@@ -12,7 +12,7 @@
 #include "FileOperations.h"
 #include "SetLogFile.h"
 
-#define INCREASE_VALUE 4
+#define INCREASE_VALUE 2
 
 #define DEFAULT_POS -20
 #define DEFAULT_STROKE_SIZE 64
@@ -88,7 +88,11 @@ ListErrors ListVerify(List *list) {
 
     for (int i = 0; i < list->size; i++) {
         if (list->data[i] == POISON && list->prev[i] != -1 && i != list->size - 1 && i != 0) {
-            printf("sdfgh");
+            error |= kInvalidUnusedPos;
+            return (ListErrors)error;
+        }
+
+        if (list->data[i] != POISON && list->prev[i] == -1) {
             error |= kInvalidUnusedPos;
             return (ListErrors)error;
         }
@@ -109,34 +113,30 @@ ListErrors ListVerify(List *list) {
 #endif
 
     for (int i = 0; i < list->size; i++) {
-    int next = list->next[i];
-    int prev = list->prev[i];
+        int next = list->next[i];
+        int prev = list->prev[i];
 
-    if (!(next == -1 || (next >= 0 && next < list->size))) {
-        error |= kInvalidNext;
-        fprintf(stderr, "Invalid next: idx=%d next=%d\n", i, next);
-        return (ListErrors)error;
+        if (!(next == -1 || (next >= 0 && next < list->size))) {
+            error |= kInvalidNext;
+            fprintf(stderr, "Invalid next: idx=%d next=%d\n", i, next);
+            return (ListErrors)error;
+        }
+
+        if (!(prev == -1 || (prev >= 0 && prev < list->size))) {
+            error |= kInvalidPrev;
+            fprintf(stderr, "Invalid prev: idx=%d prev=%d\n", i, prev);
+            return (ListErrors)error;
+        }
+
     }
 
-    if (!(prev == -1 || (prev >= 0 && prev < list->size))) {
-        error |= kInvalidPrev;
-        fprintf(stderr, "Invalid prev: idx=%d prev=%d\n", i, prev);
-        return (ListErrors)error;
-    }
 
-    // Если next указывает на валидную ячейку, и данных нет (например, POISON), но сама i-я ячейка не POISON
-    // if (next != -1 && list->data[next] == POISON && list->data[i] != POISON && list->number_of_elem != 1 && (i == 0 || list->next[i] == 0)) {
-    //     error |= kInvalidNext;
-    //     fprintf(stderr, "Next points to POISON: idx=%d, next=%d\n", i, next);
-    //     return (ListErrors)error;
-    // }
-}
-
-
-    int cnt = 0;
-    for (int i = list->free; list->next[i] != 0 && list->next[i] != list->size; i = list->next[i], ++cnt) {
+    int cnt = 1;
+    for (int i = list->free; ((i == 0 && list->next[i] == list->free) || i != 0) && i != -1; i = list->next[i], ++cnt) {
+        //printf("%d ", i);
         if (cnt > list->size - list->number_of_elem) {
             error |= kHasCycleFree;
+            break;
         }
     }
 
@@ -182,7 +182,7 @@ List_t GetListTailPos(List *list) {
 static Realloc_Mode CheckSize(List *list) {
     assert(list);
 
-    if (list->number_of_elem + INCREASE_VALUE >= list->size) {
+    if (list->number_of_elem * INCREASE_VALUE >= list->size) {
         return kIncrease;
     }
 
@@ -255,6 +255,7 @@ ListErrors InsertElementAfterPosition(List *list, int pos, List_t value) {
     return kSuccess;
 }
 
+
 ListErrors InsertElementBeforePosition(List *list, int pos, List_t value) {
     assert(list);
 
@@ -314,6 +315,9 @@ ListErrors DeleteElement(List *list, int pos, List_t value) { //value unused
     list->number_of_elem--;
 
     CHECK_ERROR_RETURN(ListVerify(list));
+    // if ((list->number_of_elem + 1) * 4 <= list->size) {
+    //     CHECK_ERROR_RETURN(DoLinerization(list));
+    // }
     //if (list->next[0] != 0) CHECK_ERROR_RETURN(DoLinerization(list));
     return kSuccess;
 }
@@ -488,13 +492,13 @@ static ListErrors DoRealloc(List *list) {
 ListCommands FuncNameToEnum(const char *func_name) {
     assert(func_name);
 
-    if (strncmp(func_name, "InsertElementAfterPosition", 27) == 0) {
+    if (strncmp(func_name, "InsertElementAfterPosition", sizeof("InsertElementAfterPosition") - 1) == 0) {
         return kInsertAfter;
 
-    } else if (strncmp(func_name, "InsertElementBeforePosition", 28) == 0) {
+    } else if (strncmp(func_name, "InsertElementBeforePosition", sizeof("InsertElementBeforePosition") - 1) == 0) {
         return kInsertBefore;
 
-    } else if (strncmp(func_name, "DeleteElement", 14) == 0) {
+    } else if (strncmp(func_name, "DeleteElement", sizeof("DeleteElement") - 1) == 0) {
         return kDelete;
 
     }
@@ -527,25 +531,27 @@ ListErrors DoLinerization(List *list) {
     ListErrors err = kSuccess;
     CHECK_ERROR_RETURN(ListVerify(list));
 
-    List_t *data = (List_t *) calloc((size_t)list->size, sizeof(List_t));
+    int new_size = list->size / 2;
+
+    List_t *data = (List_t *) calloc((size_t)new_size, sizeof(List_t));
     if (data == NULL) {
         return kNoMemory;
     }
 
-    int *next = (int *) calloc((size_t)list->size, sizeof(int));
+    int *next = (int *) calloc((size_t)new_size, sizeof(int));
     if (next == NULL) {
         free(data);
         return kNoMemory;
     }
 
-    int *prev = (int *) calloc((size_t)list->size, sizeof(int));
+    int *prev = (int *) calloc((size_t)new_size, sizeof(int));
     if (prev == NULL) {
         free(data);
         free(next);
         return kNoMemory;
     }
 
-    for (int i = 0; i < list->size; i++) {
+    for (int i = 0; i < new_size; i++) {
         data[i] = POISON;
         next[i] = 0;
         prev[i] = -1;
@@ -557,7 +563,7 @@ ListErrors DoLinerization(List *list) {
     int cnt = 1;
     int curr = GetListHeadPos(list);
 
-    while (curr != 0 && curr < list->size && curr > 0) {
+    while (curr != 0 && curr < list->size && curr > 0 && cnt < new_size) {
         data[cnt] = list->data[curr];
         next[cnt] = cnt + 1;
         prev[cnt] = cnt - 1;
@@ -575,12 +581,12 @@ ListErrors DoLinerization(List *list) {
         prev[0] = 0;
     }
 
-    if (cnt < list->size) {
+    if (cnt < new_size) {
         list->free = cnt;
-        for (int i = cnt; i < list->size; i++) {
+        for (int i = cnt; i < new_size; i++) {
             data[i] = POISON;
             prev[i] = -1;
-            next[i] = (i + 1 < list->size) ? i + 1 : 0;
+            next[i] = (i + 1 < new_size) ? i + 1 : 0;
         }
     } else {
         list->free = 0;
@@ -594,6 +600,43 @@ ListErrors DoLinerization(List *list) {
     list->next = next;
     list->prev = prev;
 
+    list->size = new_size;
+
     CHECK_ERROR_RETURN(ListVerify(list));
     return kSuccess;
 }
+
+ListErrors PushBack(List *list, List_t value) {
+    assert(list);
+    return InsertElementAfterPosition(list, list->prev[0], value);
+}
+
+ListErrors PushFront(List *list, List_t value) {
+    assert(list);
+
+    return InsertElementBeforePosition(list, list->next[0], value);
+}
+
+ListErrors PopBack(List *list) {
+    assert(list);
+
+    if (list->prev[0] == 0) {
+        fprintf(stderr, "PopBack: list is empty.\n");
+        return kInvalidPos;
+    }
+    int pos = list->prev[0];
+
+    return DeleteElement(list, pos, 0);
+}
+
+ListErrors PopFront(List *list) {
+    assert(list);
+    
+    int head = list->next[0];
+    if (head == 0) {
+        fprintf(stderr, "PopFront: list is empty.\n");
+        return kInvalidPos;
+    }
+    return DeleteElement(list, head, 0);
+}
+

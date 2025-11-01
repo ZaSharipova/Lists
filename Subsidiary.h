@@ -41,7 +41,7 @@ static const char *ListErrorString[] = {
     "Has small Cycle in PREV",
     "Invalid Next",
     "Invalid Prev",
-    "Invalid Unused position values",
+    "Invalid Unused Position Values",
     "Wrong Direction",
     "Failure",
 };

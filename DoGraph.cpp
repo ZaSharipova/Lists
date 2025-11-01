@@ -16,10 +16,6 @@ static void PrintInvisibleEdges(ChangeOperationContext *Info, FILE *file);
 
 static void FillFree(ChangeOperationContext *Info, FILE *file);
 
-static void PrintOrangeRelatedEdges(ChangeOperationContext *Info, FILE *file, int i, int next, int size);
-static void PrintSpecialEdges(ChangeOperationContext *Info, FILE *file, int i, int next, int size);
-
-
 static void PrintEdges(ChangeOperationContext *Info, FILE *file);
 
 ListErrors DumpListToGraphviz(ChangeOperationContext *Info) {
@@ -45,36 +41,6 @@ ListErrors DumpListToGraphviz(ChangeOperationContext *Info) {
     return CloseFile(file);
 }
 
-static void PrintOrangeRelatedEdges(ChangeOperationContext *Info, FILE *file, int i, int next, int size) {
-    assert(Info);
-    assert(file);
-
-    fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", i, next);
-    
-    if (Info->list->prev[next] >= 0 && Info->list->prev[next] < size) {
-        fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", next, Info->list->prev[next]);
-    } else {
-        fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", Info->list->prev[next]);
-    }
-}
-
-static void PrintSpecialEdges(ChangeOperationContext *Info, FILE *file, int i, int next, int size) {
-    assert(Info);
-    assert(file);
-
-    if (Info->list->data[i] == POISON && i != 0) {
-        if (next > 0 && next < size) {
-            fprintf(file, "    node%d -> node%d [color=\"pink\"];\n", i, next);
-        }
-    } else {
-        fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", i, next);
-        if (next >= 0 && next < size && !(Info->list->prev[next] >= 0 && Info->list->prev[next] < size)) {
-            fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", Info->list->prev[next]);
-        }
-        fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", next);
-    }
-}
-
 static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
     assert(Info);
     assert(file);
@@ -83,25 +49,55 @@ static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
 
     for (int i = 0; i < size; i++) {
         int next = Info->list->next[i];
-        
+
         if (next >= 0 && next < size) {
             if (Info->list->data[i] == POISON && i != 0) {
-                PrintSpecialEdges(Info, file, i, next, size);
-            } else if (Info->list->prev[next] == i && Info->list->next[next] >= 0 && Info->list->next[next] < size) {
-                if (next < i && Info->list->number_of_elem == 1) {
-                    continue;
+                if (next > 0 && next < size) {
+                    fprintf(file, "    node%d -> node%d [color=\"pink\"];\n", i, next);
                 }
+            }
+            else if (Info->list->prev[next] == i && Info->list->next[next] >= 0 && Info->list->next[next] < size) {
+                if (next < i && Info->list->number_of_elem == 1)
+                    continue;
                 fprintf(file, "    node%d -> node%d [color=\"purple2\", dir=both];\n", i, next);
-
-            } else if (!(Info->list->next[next] >= 0 && Info->list->next[next] < size) || i != size - 1) {
-                PrintOrangeRelatedEdges(Info, file, i, next, size);
             }
 
-        } else {
-            PrintSpecialEdges(Info, file, i, next, size);
+            else {
+                fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", i, next);
+
+                if (Info->list->prev[next] >= 0 && Info->list->prev[next] < size && Info->list->number_of_elem != 1) {
+                    //fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", next, Info->list->prev[next]);
+                }
+                else if (Info->list->prev[next] >= 0 && Info->list->prev[next] < size && Info->list->number_of_elem != 1) {
+                    fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", Info->list->prev[next]);
+                }
+                else if (Info->list->number_of_elem != 1 && Info->list->prev[next] >= 0) {
+                    fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", Info->list->prev[next]);
+                    fprintf(file, "    node%d -> node%d [color=\"firebrick2\", penwidth=\"3\"];\n", Info->list->prev[next], next);
+                }
+            }
         }
+        else {
+            if (Info->list->data[i] == POISON && i != 0) {
+                if (next > 0 && next < size) {
+                    fprintf(file, "    node%d -> node%d [color=\"pink\"];\n", i, next);
+                }
+            }
+            else {
+                fprintf(file, "    node%d -> node%d [color=\"firebrick2\", penwidth=\"3\"];\n", i, next);
+
+                if (next >= 0 && next < size && !(Info->list->prev[next] >= 0 && Info->list->prev[next] < size)) {
+                    fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", Info->list->prev[next]);
+                }
+                fprintf(file, "    node%d [shape=octagon, fillcolor=\"firebrick1\", style=filled];\n", next);
+            }
+        }
+
+        
     }
 }
+
+
 
 // static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
 //     assert(Info);
@@ -164,7 +160,7 @@ static FillAndBorderColor GetFillColors(ChangeOperationContext *Info, int pos) {
     } else if (Info->type_of_command_before == kDelete && pos == Info->list->free) {
         return (FillAndBorderColor){"#FF0000", "#8B0000"};
 
-    } else if (Info->list->data[pos] == POISON
+    } else if (Info->list->data[pos] == POISON && (Info->list->prev[pos] == -1 || pos == Info->list->size - 1) 
 #ifdef _DEBUG
            || Info->list->data[pos] == (List_t)canary_right
 #endif
@@ -176,6 +172,12 @@ static FillAndBorderColor GetFillColors(ChangeOperationContext *Info, int pos) {
         return (FillAndBorderColor){"#7FFF00", "#32CD32"};
 
     } else {
+        if ((Info->list->data[pos] == POISON && Info->list->prev[pos] != -1 && pos != Info->list->size - 1)  
+        || (Info->list->data[pos] != POISON && Info->list->prev[pos] <= -1 && pos != Info->list->size - 1) 
+        || (Info->list->next[pos] < 0 || Info->list->next[pos] >= Info->list->size) 
+        || (Info->list->prev[pos] < 0 || Info->list->prev[pos] >= Info->list->size)) {
+            return (FillAndBorderColor){"#FF0000", "#8B0000"};
+        }
         return (FillAndBorderColor){"#FFE4B5", "#CD853F"};
     }
 }
@@ -268,9 +270,12 @@ static void FillFree(ChangeOperationContext *Info, FILE *file) {
     assert(Info);
     assert(file);
 
-    fprintf(file, "    head [shape=ellipse fillcolor=\"#DCDCDC\" style=filled label=\"head=%d\"];\n", Info->list->next[0]);
-    fprintf(file, "    tail [shape=ellipse fillcolor=\"#DCDCDC\" style=filled label=\"tail=%d\"];\n", Info->list->prev[0]);
+    
+    fprintf(file, "    head [shape=ellipse fillcolor=\"#DCDCDC\" style=filled label=\"head = %d\"];\n", Info->list->next[0]);
+    fprintf(file, "    tail [shape=ellipse fillcolor=\"#DCDCDC\" style=filled label=\"tail = %d\"];\n", Info->list->prev[0]);
 
+    fprintf(file, "    {rank=same; head; node%d; }", Info->list->next[0]);
+    fprintf(file, "    {rank=same; tail; node%d; }", Info->list->prev[0]);
     fprintf(file, "    head -> node%d [color=brown, maxlen=1];\n", Info->list->next[0]);
     fprintf(file, "    tail -> node%d [color=brown, maxlen=1];\n", Info->list->prev[0]);
 

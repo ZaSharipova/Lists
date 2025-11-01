@@ -34,9 +34,12 @@ ListErrors Test1(FILE *file, List *list) { //test all
     DO_CHANGE(InsertElementAfterPosition, list, 1, 20);
     DO_CHANGE(InsertElementAfterPosition, list, 2, 25);
     DO_CHANGE(InsertElementAfterPosition, list, 3, 26);
+    list->next[0] = list->free;
     DO_CHANGE(DeleteElement, list, 2, 0);
     DO_CHANGE(InsertElementBeforePosition, list, 4, 10);
     DO_CHANGE(InsertElementAfterPosition, list, 3, 26);
+    // CHECK_ERROR_RETURN(DoLinerization(list));
+    // DoAllDump(&Info);
 
     return kSuccess;
 }

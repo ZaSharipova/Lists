@@ -31,4 +31,9 @@ ListCommands FuncNameToEnum(const char *func_name);
 List_t GetListHeadPos(List *list);
 List_t GetListTailPos(List *list);
 
+ListErrors PushBack(List *list, List_t value);
+ListErrors PushFront(List *list, List_t value);
+ListErrors PopBack(List *list);
+ListErrors PopFront(List *list);
+
 #endif //LIST_FUNCTIONS_H_
