@@ -49,4 +49,10 @@ typedef enum {
     kDump,
 } ListCommands;
 
+enum ListChanges {
+    kDataChange,
+    kNextChange,
+    kPrevChange,
+};
+
 #endif //ENUMS_H_

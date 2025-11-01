@@ -50,13 +50,18 @@ static void PrintEdges(ChangeOperationContext *Info, FILE *file) {
     for (int i = 0; i < size; i++) {
         int next = Info->list->next[i];
 
+        int prev_pos = Info->list->prev[i];
+        if (prev_pos >= 0 && prev_pos < size && ((Info->list->data[prev_pos] == POISON && prev_pos != 0) || Info->list->next[prev_pos] != i)) {
+            fprintf(file, "    node%d -> node%d [color=\"orange\", penwidth=\"3\"];\n", i, prev_pos);
+        }
+
         if (next >= 0 && next < size) {
             if (Info->list->data[i] == POISON && i != 0) {
                 if (next > 0 && next < size) {
                     fprintf(file, "    node%d -> node%d [color=\"pink\"];\n", i, next);
                 }
             }
-            else if (Info->list->prev[next] == i && Info->list->next[next] >= 0 && Info->list->next[next] < size) {
+            else if (Info->list->prev[next] == i) {
                 if (next < i && Info->list->number_of_elem == 1)
                     continue;
                 fprintf(file, "    node%d -> node%d [color=\"purple2\", dir=both];\n", i, next);
@@ -157,8 +162,8 @@ static FillAndBorderColor GetFillColors(ChangeOperationContext *Info, int pos) {
     if (pos == 0) {
         return (FillAndBorderColor){"#20B2AA", "#008B8B"};
 
-    } else if (Info->type_of_command_before == kDelete && pos == Info->list->free) {
-        return (FillAndBorderColor){"#FF0000", "#8B0000"};
+    } else if (Info->type_of_command_before == kDelete && pos == Info->list->free && Info->pos == Info->list->free) {
+        return (FillAndBorderColor){"indianred1", "#8B0000"};
 
     } else if (Info->list->data[pos] == POISON && (Info->list->prev[pos] == -1 || pos == Info->list->size - 1) 
 #ifdef _DEBUG
@@ -174,8 +179,8 @@ static FillAndBorderColor GetFillColors(ChangeOperationContext *Info, int pos) {
     } else {
         if ((Info->list->data[pos] == POISON && Info->list->prev[pos] != -1 && pos != Info->list->size - 1)  
         || (Info->list->data[pos] != POISON && Info->list->prev[pos] <= -1 && pos != Info->list->size - 1) 
-        || (Info->list->next[pos] < 0 || Info->list->next[pos] >= Info->list->size) 
-        || (Info->list->prev[pos] < 0 || Info->list->prev[pos] >= Info->list->size)) {
+        || (Info->list->prev[pos] >= 0 && Info->list->prev[pos] < Info->list->size && Info->list->data[Info->list->prev[pos]] == POISON && Info->list->prev[pos] != 0)
+        || ( Info->list->next[pos] >= 0 && Info->list->next[pos] < Info->list->size && Info->list->data[Info->list->next[pos]] != POISON && Info->list->next[pos] != 0 && Info->list->data[pos] == POISON)) {
             return (FillAndBorderColor){"#FF0000", "#8B0000"};
         }
         return (FillAndBorderColor){"#FFE4B5", "#CD853F"};

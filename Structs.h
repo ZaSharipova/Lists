@@ -29,6 +29,7 @@ typedef struct ChangeOperationContext {
     int graph_counter;
     ListErrors error;
 
+    char message[MAX_STRING_SIZE];
     ListCommands type_of_command_before;
     ListCommands type_of_command_after;
 

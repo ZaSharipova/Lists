@@ -7,6 +7,7 @@
 #include <time.h>
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 
 static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info);
 static void PrintCurrentTime(FILE *file, const char *label);
@@ -23,17 +24,22 @@ void DoDump(ChangeOperationContext *Info) {
 
     unsigned int bit = 1;
     if (Info->type_of_command_after == kDump && Info->type_of_command_before == kDump) {
-        fprintf(Info->file, "<h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
-        fprintf(Info->file, "<h3> errors: </h3>");
-        for (unsigned long long i = 0; i < NUMBER_OF_ERRORS; i++) {
-            if (Info->error & bit) {
-                fprintf(Info->file, "<h4> <font color=\"red\"> %s </font> </h4> \n", ListErrorString[i]);
+        if (strcmp(Info->message, "\0") != 0) {
+            fprintf(Info->file, "<pre> <h2> DUMP <font color = \"red\"> %s </font> </h2>", Info->message);
+        } else {
+            fprintf(Info->file, "<pre> <h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
+            fprintf(Info->file, "<h2> <font color = \"red\"> %s</font> </h2> ", Info->message);
+            fprintf(Info->file, "<h3> errors: </h3>");
+            for (unsigned long long i = 0; i < NUMBER_OF_ERRORS; i++) {
+                if (Info->error & bit) {
+                    fprintf(Info->file, "<h4> <font color=\"red\"> %s </font> </h4> \n", ListErrorString[i]);
+                }
+                bit <<= 1;
             }
-            bit <<= 1;
         }
         fprintf(Info->file, "<br>");
     } else {
-        fprintf(Info->file, "<h2> DUMP\n");
+        fprintf(Info->file, "<pre> <h2> DUMP\n");
     }
 
     PrintChangeDescription(Info->file, Info);
@@ -83,7 +89,7 @@ static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info) {
     }
     const char *time_label = is_before ? "BEFORE" : "AFTER";
     const char *color = is_before ? "#8B4513" : 
-                       (command_type == kDelete) ? "#FF0000" : "#7FFF00";
+                       (command_type == kDelete) ? "#DC143C" : "#7FFF00";
 
     fprintf(file, " <font color=\"%s\"> %s </font> ", color, time_label);
     
