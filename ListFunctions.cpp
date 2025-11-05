@@ -288,7 +288,7 @@ ListErrors InsertElementBeforePosition(List *list, int pos, List_t value) {
     return kSuccess;
 }
 
-ListErrors DeleteElement(List *list, int pos, List_t value) { //value unused
+ListErrors DeleteElement(List *list, int pos) { //value unused
     assert(list);
 
     ListErrors err = kSuccess;
@@ -501,6 +501,17 @@ ListCommands FuncNameToEnum(const char *func_name) {
     } else if (strncmp(func_name, "DeleteElement", sizeof("DeleteElement") - 1) == 0) {
         return kDelete;
 
+    } else if (strncmp(func_name, "PopFront", sizeof("PopFront") - 1) == 0) {
+        return kDelete;
+
+    } else if (strncmp(func_name, "PopBack", sizeof("PopBack") - 1) == 0) {
+        return kDelete;
+
+    } else if (strncmp(func_name, "PushFront", sizeof("PushFront") - 1) == 0) {
+        return kInsertAfter;
+        
+    } else if (strncmp(func_name, "PushBack", sizeof("PushBack") - 1) == 0) {
+        return kInsertAfter;
     }
     return kDump;
 
@@ -626,17 +637,17 @@ ListErrors PopBack(List *list) {
     }
     int pos = list->prev[0];
 
-    return DeleteElement(list, pos, 0);
+    return DeleteElement(list, pos);
 }
 
 ListErrors PopFront(List *list) {
     assert(list);
-    
+
     int head = list->next[0];
     if (head == 0) {
         fprintf(stderr, "PopFront: list is empty.\n");
         return kInvalidPos;
     }
-    return DeleteElement(list, head, 0);
+    return DeleteElement(list, head);
 }
 

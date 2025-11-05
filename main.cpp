@@ -14,7 +14,7 @@ int main(void) {
     List list = {};
     CHECK_ERROR_RETURN(ListCtor(&list));
 
-    err = Test1(file, &list);
+    err = Test7(file, &list);
     if (err & ~kSuccess) {
         fprintf(stderr, "Returning error code %d\n", err);
         ListDtor(&list);

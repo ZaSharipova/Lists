@@ -17,5 +17,6 @@ ListErrors Test3(FILE *file, List *list);
 ListErrors Test4(FILE *file, List *list); 
 ListErrors Test5(FILE *file, List *list); 
 ListErrors Test6(FILE *file, List *list); 
+ListErrors Test7(FILE *file, List *list);
 
 #endif //TEST_H_

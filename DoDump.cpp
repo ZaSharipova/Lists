@@ -9,6 +9,11 @@
 #include <math.h>
 #include <string.h>
 
+    //TODO default dump mode 
+    // to prepare for tree akinator
+    //TODO normal graph checker with less conditions
+    //TODO check messages 
+
 static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info);
 static void PrintCurrentTime(FILE *file, const char *label);
 static void PrintListInfoItem(FILE *file, const char *label, int value);
@@ -24,22 +29,18 @@ void DoDump(ChangeOperationContext *Info) {
 
     unsigned int bit = 1;
     if (Info->type_of_command_after == kDump && Info->type_of_command_before == kDump) {
-        if (strcmp(Info->message, "\0") != 0) {
-            fprintf(Info->file, "<pre> <h2> DUMP <font color = \"red\"> %s </font> </h2>", Info->message);
-        } else {
-            fprintf(Info->file, "<pre> <h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
-            fprintf(Info->file, "<h2> <font color = \"red\"> %s</font> </h2> ", Info->message);
-            fprintf(Info->file, "<h3> errors: </h3>");
-            for (unsigned long long i = 0; i < NUMBER_OF_ERRORS; i++) {
-                if (Info->error & bit) {
-                    fprintf(Info->file, "<h4> <font color=\"red\"> %s </font> </h4> \n", ListErrorString[i]);
-                }
-                bit <<= 1;
+        fprintf(Info->file, "<h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
+        fprintf(Info->file, "<h2> <font color = \"red\"> %s</font> </h2> ", Info->message);
+        fprintf(Info->file, "<h3> errors: </h3>");
+        for (unsigned long long i = 0; i < NUMBER_OF_ERRORS; i++) {
+            if (Info->error & bit) {
+                fprintf(Info->file, "<h4> <font color=\"red\"> %s </font> </h4> \n", ListErrorString[i]);
             }
+            bit <<= 1;
         }
         fprintf(Info->file, "<br>");
     } else {
-        fprintf(Info->file, "<pre> <h2> DUMP\n");
+        fprintf(Info->file, "<h2> DUMP\n");
     }
 
     PrintChangeDescription(Info->file, Info);

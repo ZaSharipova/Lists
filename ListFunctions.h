@@ -19,7 +19,7 @@ ListErrors ListDtor(List *list);
 
 ListErrors InsertElementAfterPosition(List *lists, int pos, List_t number_to_put);
 ListErrors InsertElementBeforePosition(List *list, int pos, List_t value);
-ListErrors DeleteElement(List *lists, int pos, List_t value);
+ListErrors DeleteElement(List *lists, int pos);
 
 ListErrors DoLinerization(List *list);
 
