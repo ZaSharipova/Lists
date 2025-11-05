@@ -18,11 +18,12 @@ ListErrors BeforeChange(ChangeOperationContext *Info, const char *type, int pos,
     Info->pos = pos;
     Info->number = value;
     Info->type_of_command_after = type_of_change;
+    Info->type_of_command_before = kDump;
     DoAllDump(Info);  
     return kSuccess;   
 }
 
-ListErrors AfterChange(ChangeOperationContext *Info, const char *type, int pos, List_t value) {
+ListErrors AfterChange(ChangeOperationContext *Info, const char *type) {
     assert(Info);
     assert(type);
 
@@ -35,7 +36,6 @@ ListErrors AfterChange(ChangeOperationContext *Info, const char *type, int pos, 
     return kSuccess;
 }
 
-#define COUNT_ARGS(...) COUNT_ARGS_IMPL(__VA_ARGS__, 3, 2, 1, 0)
 #define COUNT_ARGS_IMPL(_1, _2, _3, N, ...) N
 
 #define EXTRACT_ARGS_1(list) NULL, NULL
@@ -49,7 +49,7 @@ ListErrors AfterChange(ChangeOperationContext *Info, const char *type, int pos, 
   do {                                                          \
     BeforeChange(&Info, #func_name, EXTRACT_ARGS(__VA_ARGS__)); \
     func_name(__VA_ARGS__);                                     \
-    AfterChange(&Info, #func_name, EXTRACT_ARGS(__VA_ARGS__));  \
+    AfterChange(&Info, #func_name);                             \
   } while (false)
 
 // #define DO_BAD_CHANGE(type_of_arr_to_change, pos, value)       \
@@ -200,6 +200,7 @@ ListErrors Test7(FILE *file, List *list) { //test popback
     INIT_INFO(list);
 
     DO_CHANGE(InsertElementAfterPosition, list, 0, 32);
+    DO_CHANGE(InsertElementAfterPosition, list, 1, 20);
     DO_CHANGE(PopBack, list);
 
     return kSuccess;
