@@ -36,4 +36,12 @@ typedef struct ChangeOperationContext {
     char image_file[MAX_STRING_SIZE];
 } ChangeOperationContext;
 
+struct AddressList {
+    int size;
+    List_t data;
+    struct AddressList *next;
+    struct AddressList *prev;
+    int number_of_elem;
+};
+
 #endif //STRUCTS_H_

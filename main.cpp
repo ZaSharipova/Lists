@@ -7,6 +7,8 @@
 #include "Test.h"
 #include "SetLogFile.h"
 
+#include "ClassicListFunctions.h"
+
 int main(void) {
     SetLogFile("alldump.html");
     FILE *file = GetLogFile();
@@ -21,8 +23,25 @@ int main(void) {
         CloseFile(file);
         return err;
     }
-
     ListDtor(&list);
     CloseFile(file);
+
+    // AddressList *head = NULL;
+    // AddressListCtor(&head);
+
+    // List_t elem = 2;
+    // InsertAfter(head, &elem);
+    // elem = 3;
+    // InsertAfter(head->next, &elem);
+    // elem = 0;
+    // InsertBefore(&head, head, &elem);
+
+    // AddressListDump(head);
+
+    // DeleteNode(&head, head->next);
+    // AddressListDump(head);
+
+    // AddressListDtor(head);
+    
     return 0;
 }

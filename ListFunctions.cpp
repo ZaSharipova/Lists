@@ -351,8 +351,7 @@ ListErrors ListDump(List *list, unsigned int error) {
     assert(list);
 
     unsigned int bit = 1;
-    fprintf(GetLogFile(), "<h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
-    fprintf(GetLogFile(), "<h3> errors: ");
+    fprintf(GetLogFile(), "DUMP Errors: ");
     for (unsigned long long i = 0; i < NUMBER_OF_ERRORS; i++) {
         if (error & bit) {
             fprintf(GetLogFile(), "%s ", ListErrorString[i]);
@@ -360,7 +359,6 @@ ListErrors ListDump(List *list, unsigned int error) {
         bit <<= 1;
     }
 
-    fprintf(GetLogFile(), "</h3>\n");
 
     // ChangeOperationContext  Info = {GetLogFile(), list, "list", __FILE__, -1, -1, Info.graph_counter, kDump, kDump};
     // DumpListToGraphviz(&Info);
@@ -650,4 +648,3 @@ ListErrors PopFront(List *list) {
     }
     return DeleteElement(list, head);
 }
-
