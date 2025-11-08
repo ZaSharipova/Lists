@@ -44,4 +44,22 @@ struct AddressList {
     int number_of_elem;
 };
 
+typedef struct ChangeOperationContextAddr {
+    FILE *file;
+    AddressList *list;
+    const char *var_name;
+    const char *filename;      
+
+    int pos;
+    List_t number;
+    int graph_counter;
+    ListErrors error;
+
+    char message[MAX_STRING_SIZE];
+    ListCommands type_of_command_before;
+    ListCommands type_of_command_after;
+
+    char image_file[MAX_STRING_SIZE];
+} ChangeOperationContextAddr;
+
 #endif //STRUCTS_H_

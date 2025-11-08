@@ -10,11 +10,6 @@
 #include <math.h>
 #include <string.h>
 
-    //TODO default dump mode 
-    // to prepare for tree akinator
-    //TODO normal graph checker with less conditions
-    //TODO check messages 
-
 static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info);
 static void PrintCurrentTime(FILE *file, const char *label);
 static void PrintListInfoItem(FILE *file, const char *label, int value);
