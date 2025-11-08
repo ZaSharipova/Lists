@@ -500,17 +500,18 @@ ListCommands FuncNameToEnum(const char *func_name) {
         return kDelete;
 
     } else if (strncmp(func_name, "PopFront", sizeof("PopFront") - 1) == 0) {
-        return kDelete;
+        return kPopFront;
 
     } else if (strncmp(func_name, "PopBack", sizeof("PopBack") - 1) == 0) {
-        return kDelete;
+        return kPopBack;
 
     } else if (strncmp(func_name, "PushFront", sizeof("PushFront") - 1) == 0) {
-        return kInsertAfter;
+        return kPushFront;
         
     } else if (strncmp(func_name, "PushBack", sizeof("PushBack") - 1) == 0) {
-        return kInsertAfter;
+        return kPushBack;
     }
+    
     return kDump;
 
 }

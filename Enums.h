@@ -46,7 +46,13 @@ typedef enum {
     kInsertBefore,
     kInsertAfter,
     kDelete,
+    kPopBack,
+    kPopFront,
+    kPushBack,
+    kPushFront,
+    kDumpBefore,
     kDump,
+    kDumpErrors,
 } ListCommands;
 
 enum ListChanges {

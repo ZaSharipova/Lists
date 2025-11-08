@@ -1,6 +1,7 @@
 #include "DoDump.h"
 
 #include <stdio.h>
+
 #include "Structs.h"
 #include "Subsidiary.h"
 
@@ -28,7 +29,7 @@ void DoDump(ChangeOperationContext *Info) {
     assert(Info);
 
     unsigned int bit = 1;
-    if (Info->type_of_command_after == kDump && Info->type_of_command_before == kDump) {
+    if (Info->type_of_command_before == kDumpErrors) {
         fprintf(Info->file, "<h2> <font color=\"red\"> DUMP Listing Error</h2> </font>  \n");
         fprintf(Info->file, "<h2> <font color = \"red\"> %s</font> </h2> ", Info->message);
         fprintf(Info->file, "<h3> errors: </h3>");
@@ -42,6 +43,9 @@ void DoDump(ChangeOperationContext *Info) {
     } else {
         fprintf(Info->file, "<h2> DUMP\n");
     }
+    // if (Info->message[0] != '\0') {
+    //     fprintf(Info->file, "%s", Info->message);
+    // }
 
     PrintChangeDescription(Info->file, Info);
 
@@ -79,18 +83,24 @@ void DoDump(ChangeOperationContext *Info) {
 }
 
 static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info) {
-    assert(file && Info);
+    assert(file);
+    assert(Info);
 
-    bool is_before = (Info->type_of_command_before == kDump);
+    bool is_before = (Info->type_of_command_before == kDumpBefore);
     int command_type = is_before ? Info->type_of_command_after : Info->type_of_command_before;
     
-    if (Info->type_of_command_before == kDump && Info->type_of_command_after == kDump) {
+    if (Info->type_of_command_before == kDumpErrors) {
         //fprintf(file, "<h3> Error Listing </h3>");
         return;
     }
+
+    if (Info->type_of_command_before == kDump) {
+        return;
+    }
+
     const char *time_label = is_before ? "BEFORE" : "AFTER";
     const char *color = is_before ? "#8B4513" : 
-                       (command_type == kDelete) ? "#DC143C" : "#7FFF00";
+                       (command_type == kDelete || command_type == kPopBack || command_type == kPopFront) ? "#DC143C" : "#7FFF00";
 
     fprintf(file, " <font color=\"%s\"> %s </font> ", color, time_label);
     
@@ -98,7 +108,7 @@ static void PrintChangeDescription(FILE *file, ChangeOperationContext *Info) {
         const char *position = (command_type == kInsertAfter) ? "AFTER" : "BEFORE";
         fprintf(file, "<font color=\"%s\"> %s </font> value <font color=\"%s\"> " LIST_SPEC " </font> %s position <font color=\"%s\">%d</font></h3>\n",
                 color, "INSERT", color, Info->number, position, color, Info->pos);
-    } else if (command_type == kDelete) {
+    } else if (command_type == kDelete || command_type == kPopBack || command_type == kPopFront) {
         fprintf(file, "<font color=\"%s\"> %s </font> value from position <font color=\"%s\">%d</font></h3>\n",
                 color, "DELETE", color, Info->pos);
     }

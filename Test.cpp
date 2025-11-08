@@ -15,10 +15,13 @@ ListErrors BeforeChange(ChangeOperationContext *Info, const char *type, int pos,
     assert(type);
 
     ListCommands type_of_change = FuncNameToEnum(type);
-    Info->pos = pos;
+    if (type_of_change == kPopBack || type_of_change == kPushBack) Info->pos = Info->list->prev[0];
+    else if (type_of_change == kPopFront || type_of_change == kPushFront) Info->pos = Info->list->next[0];
+    else Info->pos = pos;
     Info->number = value;
     Info->type_of_command_after = type_of_change;
-    Info->type_of_command_before = kDump;
+    Info->type_of_command_before = kDumpBefore;
+    Info->message[0] = '\0';
     DoAllDump(Info);  
     return kSuccess;   
 }
@@ -29,7 +32,8 @@ ListErrors AfterChange(ChangeOperationContext *Info, const char *type) {
 
     ListCommands type_of_change = FuncNameToEnum(type);
     Info->type_of_command_before = type_of_change;
-    Info->type_of_command_after = kDump;
+    Info->type_of_command_after = kDumpBefore;
+    Info->message[0] = '\0';
     DoAllDump(Info);
     Info->type_of_command_before = type_of_change;
     Info->type_of_command_after = type_of_change;
@@ -67,37 +71,43 @@ ListErrors AfterChange(ChangeOperationContext *Info, const char *type) {
 //     snprintf(Info.message, sizeof(Info.message), "Do change ")
 //     }
 
-// ListErrors DoBadChange(ChangeOperationContext *Info, ListChanges type_of_arr_to_change, int pos, int value) {
-//     assert(Info);
+ListErrors DoBadChange(ChangeOperationContext *Info, ListChanges type_of_arr_to_change, int pos, int value) {
+    assert(Info);
 
-//     Info->pos = pos, Info->number = value;
-//     Info->type_of_command_after = kDump, Info->type_of_command_before = kDump;
-//     DoAllDump(Info);
-//     char change_name[MAX_STRING_SIZE] = "";
+    Info->pos = pos, Info->number = value;
+    Info->type_of_command_after = kDump, Info->type_of_command_before = kDump;
+    DoAllDump(Info);
+    char change_name[MAX_STRING_SIZE] = "";
 
-//     switch (type_of_arr_to_change) {
-//     case (kDataChange):
-//         Info->list->data[pos] = value;
-//         strcpy(change_name, "DATA");
-//         break;
-//     case (kNextChange):
-//         Info->list->next[pos] = value;
-//         strcpy(change_name, "NEXT");
-//         break;
-//     case (kPrevChange):
-//         Info->list->prev[pos] = value;
-//         strcpy(change_name, "PREV");
-//         break;
-//     }
+    switch (type_of_arr_to_change) {
+    case (kDataChange):
+        Info->list->data[pos] = value;
+        strcpy(change_name, "DATA");
+        break;
+    case (kNextChange):
+        Info->list->next[pos] = value;
+        strcpy(change_name, "NEXT");
+        break;
+    case (kPrevChange):
+        Info->list->prev[pos] = value;
+        strcpy(change_name, "PREV");
+        break;
+    }
 
-//     snprintf(Info->message, sizeof(Info->message), "Do change %s in position %d with value %d", change_name, pos, value);
-//     return kSuccess;
-// }
+    snprintf(Info->message, sizeof(Info->message), "Do change %s in position %d with value %d", change_name, pos, value);
+    ListErrors error = ListVerify(Info->list);
+    Info->error = error;
+    Info->type_of_command_before = kDumpErrors;
+    DoAllDump(Info);
+    return kFailure;
+}
+
 ListErrors Test1(FILE *file, List *list) { //test all
     assert(file);
     assert(list);
 
     ChangeOperationContext Info = {};
+    ListErrors err = kSuccess;
     INIT_INFO(list);
 
     DO_CHANGE(InsertElementAfterPosition, list, 0, 32);
@@ -107,7 +117,7 @@ ListErrors Test1(FILE *file, List *list) { //test all
     //DO_CHANGE(PopBack(list));
     //list->next[0] = list->free;
     //list->next[2] = 700;
-    //DoBadChange(&Info, kNextChange, 2, 700);
+    CHECK_ERROR_RETURN(DoBadChange(&Info, kNextChange, 2, 700));
     //list->next[3] = 0;
 
     DO_CHANGE(DeleteElement, list, 2);
